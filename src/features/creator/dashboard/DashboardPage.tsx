@@ -103,12 +103,20 @@ export function DashboardPage() {
           <p className="max-w-prose text-base text-ink-muted">{id.dashboard.subtitle}</p>
         </div>
 
-        <Link
-          to="/quizzes/new"
-          className={buttonStyles('primary', 'lg', 'shrink-0')}
-        >
-          {id.dashboard.create}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/quizzes/ai"
+            className={buttonStyles('secondary', 'lg', 'shrink-0')}
+          >
+            {id.dashboard.createWithAi}
+          </Link>
+          <Link
+            to="/quizzes/new"
+            className={buttonStyles('primary', 'lg', 'shrink-0')}
+          >
+            {id.dashboard.create}
+          </Link>
+        </div>
       </div>
 
       {deletedTitle ? (

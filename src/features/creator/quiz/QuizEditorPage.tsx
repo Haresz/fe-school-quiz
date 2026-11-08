@@ -2,7 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import type { AiQuizDraft } from '@/api/ai'
 import {
   getQuizForEdit,
   saveQuiz,
@@ -19,6 +20,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { Textarea } from '@/components/ui/Textarea'
 import { id } from '@/i18n/id'
 import type { QuizSource, QuizStatus } from '@/types/database'
+import { mapAiDraftToForm } from '../ai/ai-draft'
 import { QuestionEditor } from './QuestionEditor'
 import { quizErrorMessage } from './quiz-error-message'
 import {
@@ -36,7 +38,11 @@ type SavedQuizState = SavedQuiz & {
 
 export function QuizEditorPage() {
   const params = useParams()
+  const location = useLocation()
   const quizId = params.id
+  const aiDraft = quizId
+    ? undefined
+    : (location.state as { aiDraft?: AiQuizDraft } | null)?.aiDraft
 
   const quizQuery = useQuery({
     queryKey: ['quiz', quizId],
@@ -76,21 +82,34 @@ export function QuizEditorPage() {
     <QuizEditorForm
       key={quizQuery.data?.id ?? 'new-quiz'}
       initialData={quizQuery.data}
+      aiDraft={aiDraft}
     />
   )
 }
 
-function QuizEditorForm({ initialData }: { initialData?: QuizEditorData }) {
+function QuizEditorForm({
+  initialData,
+  aiDraft,
+}: {
+  initialData?: QuizEditorData
+  aiDraft?: AiQuizDraft
+}) {
   const queryClient = useQueryClient()
+  const isAiDraft = Boolean(aiDraft) && !initialData
   const [defaultValues] = useState<QuizFormValues>(() =>
-    initialData ? mapEditorDataToForm(initialData) : emptyQuizFormValues(),
+    initialData
+      ? mapEditorDataToForm(initialData)
+      : aiDraft
+        ? mapAiDraftToForm(aiDraft)
+        : emptyQuizFormValues(),
   )
   const [meta] = useState<{ source: QuizSource; materialId: string | null }>({
-    source: initialData?.source ?? 'manual',
-    materialId: initialData?.materialId ?? null,
+    source: initialData?.source ?? (aiDraft ? 'ai' : 'manual'),
+    materialId: initialData?.materialId ?? aiDraft?.material_id ?? null,
   })
   const [activeQuizId, setActiveQuizId] = useState(initialData?.id)
   const [saved, setSaved] = useState<SavedQuizState | null>(null)
+  const [showAiNotice, setShowAiNotice] = useState(isAiDraft)
   const [copied, setCopied] = useState(false)
 
   const {
@@ -138,6 +157,7 @@ function QuizEditorForm({ initialData }: { initialData?: QuizEditorData }) {
 
       setActiveQuizId(result.id)
       setSaved({ ...result, status: values.status })
+      setShowAiNotice(false)
       setCopied(false)
       reset(values)
       void queryClient.invalidateQueries({ queryKey: ['quizzes'] })
@@ -173,7 +193,9 @@ function QuizEditorForm({ initialData }: { initialData?: QuizEditorData }) {
           <h1 className="text-3xl font-bold tracking-tight text-ink">
             {activeQuizId ? id.editor.editTitle : id.editor.newTitle}
           </h1>
-          <p className="max-w-prose text-base text-ink-muted">{id.editor.subtitle}</p>
+          <p className="max-w-prose text-base text-ink-muted">
+            {isAiDraft ? id.ai.editorSubtitle : id.editor.subtitle}
+          </p>
         </div>
 
         <Link
@@ -183,6 +205,19 @@ function QuizEditorForm({ initialData }: { initialData?: QuizEditorData }) {
           {id.editor.backToDashboard}
         </Link>
       </div>
+
+      {showAiNotice ? (
+        <section
+          role="status"
+          className="flex flex-col gap-3 rounded-card border-2 border-violet bg-violet-tint/50 p-4 sm:flex-row sm:items-start"
+        >
+          <Chip variant="ai" className="w-fit shrink-0" />
+          <div className="space-y-1">
+            <p className="text-base font-bold text-ink">{id.ai.reviewNotice}</p>
+            <p className="text-sm text-ink-muted">{id.ai.reviewHint}</p>
+          </div>
+        </section>
+      ) : null}
 
       <form onSubmit={onSubmit} noValidate className="space-y-6">
         <Card className="space-y-4">

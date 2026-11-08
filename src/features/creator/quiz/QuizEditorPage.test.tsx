@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { AiQuizDraft } from '@/api/ai'
 import { getQuizForEdit, saveQuiz, type QuizEditorData } from '@/api/quizzes'
 import { QuizApiError } from '@/api/quiz-errors'
 import { id } from '@/i18n/id'
@@ -16,14 +17,14 @@ vi.mock('@/api/quizzes', () => ({
 const mockedGetQuizForEdit = vi.mocked(getQuizForEdit)
 const mockedSaveQuiz = vi.mocked(saveQuiz)
 
-function renderEditor(path: string) {
+function renderEditor(path: string, state?: unknown) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
 
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter initialEntries={[{ pathname: path, state }]}>
         <Routes>
           <Route path="/quizzes/new" element={<QuizEditorPage />} />
           <Route path="/quizzes/:id/edit" element={<QuizEditorPage />} />
@@ -121,6 +122,61 @@ describe('QuizEditorPage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: id.editor.editTitle }),
     ).toBeInTheDocument()
+  })
+
+  it('memuat draf AI, menampilkan pengingat review, lalu menyimpan sebagai AI', async () => {
+    const aiDraft: AiQuizDraft = {
+      material_id: 'material-1',
+      title: 'Pecahan dari AI',
+      description: null,
+      source: 'ai',
+      status: 'draft',
+      settings: { reveal_answers: false },
+      questions: [
+        {
+          type: 'multiple_choice',
+          body: '1/2 + 1/4 = ?',
+          options: ['1/4', '3/4'],
+          correct_index: 1,
+          explanation: null,
+          points: 1,
+        },
+      ],
+    }
+    const user = userEvent.setup()
+    renderEditor('/quizzes/new', { aiDraft })
+
+    expect(screen.getByText(id.ai.reviewNotice)).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Pecahan dari AI')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('1/2 + 1/4 = ?')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: id.editor.save }))
+
+    await waitFor(() => {
+      expect(mockedSaveQuiz).toHaveBeenCalledWith({
+        material_id: 'material-1',
+        title: 'Pecahan dari AI',
+        description: null,
+        source: 'ai',
+        status: 'draft',
+        settings: { reveal_answers: false },
+        questions: [
+          {
+            type: 'multiple_choice',
+            body: '1/2 + 1/4 = ?',
+            options: ['1/4', '3/4'],
+            correct_index: 1,
+            explanation: undefined,
+            points: 1,
+          },
+        ],
+      })
+    })
+
+    expect(
+      await screen.findByRole('heading', { name: id.editor.savedDraftTitle }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(id.ai.reviewNotice)).not.toBeInTheDocument()
   })
 
   it('memuat kuis yang sudah ada dan menyimpannya kembali', async () => {

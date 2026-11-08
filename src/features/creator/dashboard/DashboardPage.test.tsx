@@ -90,6 +90,10 @@ describe('DashboardPage', () => {
   it('menampilkan daftar kuis beserta status dan kode', async () => {
     renderDashboard()
 
+    expect(
+      screen.getByRole('link', { name: id.dashboard.createWithAi }),
+    ).toHaveAttribute('href', '/quizzes/ai')
+
     const draftArticle = await screen.findByRole('article', {
       name: draftQuiz.title,
     })

@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
+import { AiQuizPage } from '@/features/creator/ai/AiQuizPage'
 import { DashboardPage } from '@/features/creator/dashboard/DashboardPage'
 import { QuizEditorPage } from '@/features/creator/quiz/QuizEditorPage'
 import { QuizResultsPage } from '@/features/creator/results/QuizResultsPage'
@@ -20,6 +21,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<CreatorLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/quizzes/ai" element={<AiQuizPage />} />
           <Route path="/quizzes/new" element={<QuizEditorPage />} />
           <Route path="/quizzes/:id/edit" element={<QuizEditorPage />} />
           <Route path="/quizzes/:id/results" element={<QuizResultsPage />} />

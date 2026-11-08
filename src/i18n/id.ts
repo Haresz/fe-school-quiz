@@ -25,6 +25,7 @@ export const id = {
     title: 'Dasbor',
     subtitle: 'Kuis yang kamu buat. Edit, bagikan, atau lihat hasilnya.',
     create: 'Buat kuis',
+    createWithAi: 'Buat dengan AI',
     filterLabel: 'Saring kuis',
     filterAll: 'Semua',
     filterDraft: 'Draf',
@@ -53,6 +54,75 @@ export const id = {
     draftShareHint: 'Terbitkan dulu agar murid bisa mengerjakan.',
     loadErrorTitle: 'Dasbor belum bisa dimuat',
     loadRetry: 'Coba lagi',
+  },
+  ai: {
+    title: 'Buat kuis dengan AI',
+    subtitle:
+      'Pilih materi, lalu minta AI menyusun soal. Hasilnya bisa kamu periksa dan ubah dulu.',
+    backToDashboard: 'Kembali ke dasbor',
+    formTitle: 'Arahan untuk AI',
+    formHint: 'Pilih materi dan jumlah soal. AI akan menyiapkan draf yang bisa kamu edit.',
+    materialLabel: 'Materi',
+    materialHint: 'Pilih materi yang sesuai dengan kelas dan topik.',
+    materialPlaceholder: 'Pilih materi',
+    materialLoading: 'Memuat materi...',
+    materialErrorTitle: 'Materi belum bisa dimuat',
+    materialErrorBody: 'Periksa koneksi, lalu coba lagi.',
+    materialEmptyTitle: 'Belum ada materi untuk AI.',
+    materialEmptyBody:
+      'Materi perlu disiapkan dulu. Untuk sekarang, kamu bisa membuat soal sendiri.',
+    createManually: 'Buat soal sendiri',
+    promptLabel: 'Arahan tambahan',
+    promptHint: 'Opsional, maksimal 500 karakter. Contoh: fokus pada soal cerita.',
+    promptPlaceholder: 'Tulis arahan khusus untuk AI di sini.',
+    numQuestionsLabel: 'Jumlah soal',
+    numQuestionsHint: 'Isi 1 sampai 20 soal.',
+    mixLabel: 'Jenis soal',
+    mixHint: 'Campuran membuat variasi soal lebih banyak.',
+    mixMixed: 'Campuran',
+    mixMcOnly: 'Pilihan ganda',
+    mixTextOnly: 'Isian singkat',
+    difficultyLabel: 'Tingkat kesulitan',
+    difficultyEasy: 'Mudah',
+    difficultyMedium: 'Sedang',
+    difficultyHard: 'Sulit',
+    submit: 'Buat soal dengan AI',
+    submitting: 'Menyusun soal...',
+    submittingStatus: 'AI sedang menyusun soal. Tunggu sebentar, ya.',
+    noteTitle: 'AI bisa keliru',
+    noteBody:
+      'Selalu periksa kebenaran soal, jawaban, dan pembahasan sebelum diterbitkan.',
+    reviewNotice: 'Dibuat AI. Periksa dulu sebelum disimpan.',
+    reviewHint:
+      'Cek pertanyaan, jawaban benar, dan pembahasan. Ubah bagian yang belum pas.',
+    editorSubtitle: 'Periksa soal dari AI, lalu simpan sebagai draf.',
+    errorTitle: 'Soal belum berhasil dibuat',
+    validation: {
+      materialRequired: 'Pilih materi dulu.',
+      promptMax: 'Arahan tambahan maksimal 500 karakter.',
+      countRequired: 'Isi jumlah soal dulu.',
+      countRange: 'Jumlah soal harus 1 sampai 20.',
+    },
+    errors: {
+      unauthorized: 'Sesi kamu sudah berakhir. Masuk lagi untuk membuat soal.',
+      invalid_request: 'Ada isian yang belum sesuai. Periksa lagi, ya.',
+      material_not_found: 'Materi sudah tidak aktif. Pilih materi lain, ya.',
+      rate_limited:
+        'Batas membuat soal dengan AI sudah tercapai. Coba lagi nanti, atau buat soal sendiri.',
+      ai_capacity_reached:
+        'Layanan AI sedang penuh. Coba lagi nanti, atau buat soal sendiri.',
+      ai_bad_output:
+        'AI belum berhasil membuat soal. Coba lagi, atau buat soal sendiri.',
+      ai_blocked:
+        'Permintaan ini diblokir filter keamanan AI. Ubah arahan, lalu coba lagi.',
+      ai_timeout: 'AI terlalu lama menjawab. Coba lagi, ya.',
+      ai_quota_exceeded:
+        'Kuota AI sedang habis. Coba lagi nanti, atau buat soal sendiri.',
+      ai_unavailable: 'Layanan AI sedang tidak tersedia. Coba lagi nanti.',
+      internal_error: 'Ada yang belum beres. Coba lagi.',
+      network: 'Koneksi terputus. Periksa sinyal, lalu coba lagi.',
+      unknown: 'Ada yang belum beres. Coba lagi.',
+    },
   },
   auth: {
     login: {

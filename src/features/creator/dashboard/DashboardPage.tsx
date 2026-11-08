@@ -122,7 +122,7 @@ export function DashboardPage() {
       {deletedTitle ? (
         <p
           role="status"
-          className="rounded-input border border-green bg-green-tint px-4 py-3 text-sm font-bold text-green"
+          className="rounded-input border border-green bg-green-tint px-4 py-3 text-base font-bold text-green"
         >
           {id.dashboard.deleted}
         </p>
@@ -172,7 +172,7 @@ export function DashboardPage() {
                     aria-pressed={isActive}
                     onClick={() => handleFilter(item.value)}
                     className={cn(
-                      'inline-flex min-h-11 items-center gap-2 rounded-pill border-2 px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-blue focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
+                      'inline-flex min-h-11 items-center gap-2 rounded-pill border-2 px-4 text-base font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-blue focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
                       isActive
                         ? 'border-ink bg-blue text-white'
                         : 'border-ink bg-white text-ink hover:bg-blue-tint',
@@ -181,7 +181,7 @@ export function DashboardPage() {
                     {item.label}
                     <span
                       className={cn(
-                        'rounded-pill px-2 py-0.5 text-xs',
+                        'rounded-pill px-2 py-0.5 text-base',
                         isActive ? 'bg-white/20 text-white' : 'bg-paper text-ink-muted',
                       )}
                     >
@@ -254,7 +254,7 @@ export function DashboardPage() {
                               </p>
                             ) : null}
 
-                            <p className="text-sm text-ink-muted">
+                            <p className="text-base text-ink-muted">
                               {id.dashboard.updatedAt} {formatDate(quiz.updated_at)}
                             </p>
                           </div>
@@ -290,7 +290,7 @@ export function DashboardPage() {
                         </div>
 
                         <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-paper-line pt-4">
-                          <span className="text-sm font-bold text-ink">
+                          <span className="text-base font-bold text-ink">
                             {id.dashboard.codeLabel}
                           </span>
                           <span className="rounded-input border border-paper-line bg-paper px-3 py-1.5 font-display text-lg font-semibold tracking-[0.2em] text-ink">
@@ -319,7 +319,7 @@ export function DashboardPage() {
                               </Link>
                             </>
                           ) : (
-                            <p className="text-sm text-ink-muted">
+                            <p className="text-base text-ink-muted">
                               {id.dashboard.draftShareHint}
                             </p>
                           )}
@@ -337,12 +337,12 @@ export function DashboardPage() {
                             >
                               {id.dashboard.deleteConfirmTitle}
                             </h3>
-                            <p className="text-sm text-ink-muted">
+                            <p className="text-base text-ink-muted">
                               {id.dashboard.deleteConfirmBody}
                             </p>
 
                             {showDeleteError ? (
-                              <p role="alert" className="text-sm font-bold text-coral">
+                              <p role="alert" className="text-base font-bold text-coral">
                                 {quizErrorMessage(deleteMutation.error)}
                               </p>
                             ) : null}

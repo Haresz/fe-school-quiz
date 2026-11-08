@@ -209,7 +209,7 @@ export function AiQuizPage() {
 
             <div className="rounded-input border border-paper-line bg-yellow-tint/50 p-4">
               <h3 className="text-base font-bold text-ink">{id.ai.noteTitle}</h3>
-              <p className="mt-1 text-sm text-ink-muted">{id.ai.noteBody}</p>
+              <p className="mt-1 text-base text-ink-muted">{id.ai.noteBody}</p>
             </div>
 
             <div className="flex justify-end border-t border-paper-line pt-4">

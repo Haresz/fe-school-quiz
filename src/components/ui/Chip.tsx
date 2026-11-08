@@ -59,7 +59,7 @@ export function Chip({ variant, className }: ChipProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-pill px-3 py-1 text-sm font-bold',
+        'inline-flex items-center gap-1.5 rounded-pill px-3 py-1 text-base font-bold',
         styles[variant],
         className,
       )}

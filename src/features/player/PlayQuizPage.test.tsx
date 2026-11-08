@@ -148,6 +148,23 @@ describe('PlayQuizPage', () => {
     ).toHaveLength(2)
   })
 
+  it('memindahkan fokus ke judul soal saat mulai dan pindah soal', async () => {
+    const user = userEvent.setup()
+    renderPlayer()
+    await startQuiz(user)
+
+    expect(
+      screen.getByRole('heading', { name: quiz.questions[0].body }),
+    ).toHaveFocus()
+
+    await user.click(screen.getByRole('radio', { name: 'B. 3/4' }))
+    await user.click(screen.getByRole('button', { name: id.player.question.next }))
+
+    expect(
+      screen.getByRole('heading', { name: quiz.questions[1].body }),
+    ).toHaveFocus()
+  })
+
   it('meminta jawaban sebelum lanjut ke soal berikutnya', async () => {
     const user = userEvent.setup()
     renderPlayer()

@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useEffect, useRef, type FormEvent } from 'react'
 import type { PlayerQuestion } from '@/api/player'
 import { Button } from '@/components/ui/Button'
 import { id } from '@/i18n/id'
@@ -54,10 +54,15 @@ export function QuizQuestionView({
   error,
   submitError,
 }: QuizQuestionViewProps) {
+  const questionHeadingRef = useRef<HTMLHeadingElement>(null)
   const selectedOption = typeof answer === 'number' ? answer : undefined
   const textAnswer = typeof answer === 'string' ? answer : ''
   const questionHeadingId = `question-${question.id}-body`
   const singleLineInputId = `question-${question.id}-text`
+
+  useEffect(() => {
+    questionHeadingRef.current?.focus({ preventScroll: true })
+  }, [question.id])
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -95,8 +100,10 @@ export function QuizQuestionView({
         <form onSubmit={handleSubmit} className="mt-6 flex min-h-[calc(100dvh-9rem)] flex-col">
           <section aria-labelledby={questionHeadingId} className="space-y-5">
             <h1
+              ref={questionHeadingRef}
               id={questionHeadingId}
-              className="max-w-[60ch] font-display text-2xl font-semibold leading-snug text-ink sm:text-3xl"
+              tabIndex={-1}
+              className="max-w-[60ch] font-display text-2xl font-semibold leading-snug text-ink focus:outline-none sm:text-3xl"
             >
               {question.body}
             </h1>

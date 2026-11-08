@@ -13,7 +13,7 @@ export function Spinner({ label = id.common.loading, className }: SpinnerProps) 
         aria-hidden="true"
         className="size-5 animate-spin rounded-pill border-2 border-paper-line border-t-blue"
       />
-      <span className="text-sm font-bold">{label}</span>
+      <span className="text-base font-bold">{label}</span>
     </div>
   )
 }

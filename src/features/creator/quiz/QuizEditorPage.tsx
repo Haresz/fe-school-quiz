@@ -214,7 +214,7 @@ function QuizEditorForm({
           <Chip variant="ai" className="w-fit shrink-0" />
           <div className="space-y-1">
             <p className="text-base font-bold text-ink">{id.ai.reviewNotice}</p>
-            <p className="text-sm text-ink-muted">{id.ai.reviewHint}</p>
+            <p className="text-base text-ink-muted">{id.ai.reviewHint}</p>
           </div>
         </section>
       ) : null}
@@ -248,7 +248,7 @@ function QuizEditorForm({
                 {id.editor.questionsHint}
               </p>
             </div>
-            <p className="rounded-pill bg-yellow-tint px-3 py-1 text-sm font-bold text-ink">
+            <p className="rounded-pill bg-yellow-tint px-3 py-1 text-base font-bold text-ink">
               {id.editor.questionTotal}: {totalPoints}
             </p>
           </div>
@@ -276,7 +276,7 @@ function QuizEditorForm({
           )}
 
           {errors.questions?.message ? (
-            <p role="alert" className="text-sm font-bold text-coral">
+            <p role="alert" className="text-base font-bold text-coral">
               {errors.questions.message}
             </p>
           ) : null}
@@ -299,7 +299,7 @@ function QuizEditorForm({
           </div>
 
           {fields.length >= 50 ? (
-            <p className="text-sm text-ink-muted">{id.editor.questionLimit}</p>
+            <p className="text-base text-ink-muted">{id.editor.questionLimit}</p>
           ) : null}
         </section>
 
@@ -307,7 +307,7 @@ function QuizEditorForm({
           <h2 className="text-xl font-semibold text-ink">{id.editor.settingsTitle}</h2>
 
           <fieldset className="space-y-2">
-            <legend className="text-sm font-bold text-ink">
+            <legend className="text-base font-bold text-ink">
               {id.editor.statusLabel}
             </legend>
 
@@ -323,7 +323,7 @@ function QuizEditorForm({
                   <span className="block text-base font-bold text-ink">
                     {id.editor.statusDraft}
                   </span>
-                  <span className="mt-1 block text-sm text-ink-muted">
+                  <span className="mt-1 block text-base text-ink-muted">
                     {id.editor.statusHintDraft}
                   </span>
                 </span>
@@ -340,7 +340,7 @@ function QuizEditorForm({
                   <span className="block text-base font-bold text-ink">
                     {id.editor.statusPublished}
                   </span>
-                  <span className="mt-1 block text-sm text-ink-muted">
+                  <span className="mt-1 block text-base text-ink-muted">
                     {id.editor.statusHintPublished}
                   </span>
                 </span>
@@ -358,7 +358,7 @@ function QuizEditorForm({
               <span className="block text-base font-bold text-ink">
                 {id.editor.revealAnswers}
               </span>
-              <span className="mt-1 block text-sm text-ink-muted">
+              <span className="mt-1 block text-base text-ink-muted">
                 {id.editor.revealAnswersHint}
               </span>
             </span>
@@ -384,11 +384,11 @@ function QuizEditorForm({
             </div>
 
             <div className="space-y-1">
-              <p className="text-sm font-bold text-ink">{id.editor.shareCodeLabel}</p>
+              <p className="text-base font-bold text-ink">{id.editor.shareCodeLabel}</p>
               <p className="font-display text-4xl font-bold tracking-[0.25em] text-ink">
                 {saved.share_code}
               </p>
-              <p className="break-all text-sm text-ink-muted">{shareUrl}</p>
+              <p className="break-all text-base text-ink-muted">{shareUrl}</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -406,7 +406,7 @@ function QuizEditorForm({
             </div>
 
             {copied ? (
-              <p role="status" className="text-sm font-bold text-green">
+              <p role="status" className="text-base font-bold text-green">
                 {id.editor.copied}
               </p>
             ) : null}
@@ -421,7 +421,7 @@ function QuizEditorForm({
         ) : null}
 
         <Card className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-ink-muted">
+          <p className="text-base text-ink-muted">
             {status === 'published'
               ? id.editor.statusHintPublished
               : id.editor.statusHintDraft}

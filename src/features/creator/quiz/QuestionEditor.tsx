@@ -119,7 +119,7 @@ export function QuestionEditor({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-bold text-ink">{id.editor.question.typeLabel}</p>
+        <p className="text-base font-bold text-ink">{id.editor.question.typeLabel}</p>
         <div className="flex flex-wrap gap-2">
           <Button
             variant={type === 'multiple_choice' ? 'primary' : 'secondary'}
@@ -164,10 +164,10 @@ export function QuestionEditor({
 
       {type === 'multiple_choice' ? (
         <fieldset className="space-y-3">
-          <legend className="text-sm font-bold text-ink">
+          <legend className="text-base font-bold text-ink">
             {id.editor.question.optionsLabel}
           </legend>
-          <p className="text-sm text-ink-muted">{id.editor.question.optionsHint}</p>
+          <p className="text-base text-ink-muted">{id.editor.question.optionsHint}</p>
 
           <div className="space-y-3">
             {optionFields.map((field, optionIndex) => {
@@ -225,13 +225,13 @@ export function QuestionEditor({
           </div>
 
           {questionErrors?.options?.message ? (
-            <p role="alert" className="text-sm font-bold text-coral">
+            <p role="alert" className="text-base font-bold text-coral">
               {questionErrors.options.message}
             </p>
           ) : null}
 
           {questionErrors?.correctOptionKey?.message ? (
-            <p role="alert" className="text-sm font-bold text-coral">
+            <p role="alert" className="text-base font-bold text-coral">
               {questionErrors.correctOptionKey.message}
             </p>
           ) : null}
@@ -246,10 +246,10 @@ export function QuestionEditor({
         </fieldset>
       ) : (
         <fieldset className="space-y-3">
-          <legend className="text-sm font-bold text-ink">
+          <legend className="text-base font-bold text-ink">
             {id.editor.question.acceptedLabel}
           </legend>
-          <p className="text-sm text-ink-muted">{id.editor.question.acceptedHint}</p>
+          <p className="text-base text-ink-muted">{id.editor.question.acceptedHint}</p>
 
           <div className="space-y-3">
             {acceptedFields.map((field, answerIndex) => (
@@ -278,7 +278,7 @@ export function QuestionEditor({
           </div>
 
           {questionErrors?.acceptedAnswers?.message ? (
-            <p role="alert" className="text-sm font-bold text-coral">
+            <p role="alert" className="text-base font-bold text-coral">
               {questionErrors.acceptedAnswers.message}
             </p>
           ) : null}

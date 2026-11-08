@@ -115,7 +115,7 @@ export function SignupPage() {
           />
 
           {serverError ? (
-            <p role="alert" className="text-sm font-bold text-coral">
+            <p role="alert" className="text-base font-bold text-coral">
               {serverError}
             </p>
           ) : null}
@@ -125,7 +125,7 @@ export function SignupPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-ink-muted">
+        <p className="mt-4 text-center text-base text-ink-muted">
           {id.auth.signup.haveAccount}{' '}
           <Link
             to="/login"
@@ -138,7 +138,7 @@ export function SignupPage() {
 
       <Link
         to="/"
-        className="w-fit self-center rounded-input px-2 py-2 text-sm font-bold text-blue underline underline-offset-4 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-blue"
+        className="w-fit self-center rounded-input px-2 py-2 text-base font-bold text-blue underline underline-offset-4 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-blue"
       >
         {id.auth.backHome}
       </Link>

@@ -15,6 +15,7 @@ export const id = {
     empty: 'Belum ada isinya.',
     errorTitle: 'Ada yang belum beres',
     errorBody: 'Coba lagi sebentar lagi.',
+    skipToContent: 'Lewati ke konten utama',
   },
   nav: {
     creatorLogin: 'Masuk sebagai pembuat kuis',

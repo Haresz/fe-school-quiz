@@ -21,6 +21,53 @@ export const id = {
     dashboard: 'Dasbor',
     logout: 'Keluar',
   },
+  auth: {
+    login: {
+      title: 'Masuk',
+      subtitle: 'Masuk untuk membuat dan mengelola kuis.',
+      email: 'Email',
+      password: 'Kata sandi',
+      submit: 'Masuk',
+      submitting: 'Sedang masuk...',
+      noAccount: 'Belum punya akun?',
+      signupLink: 'Daftar',
+    },
+    signup: {
+      title: 'Daftar',
+      subtitle: 'Buat akun untuk mulai membuat kuis.',
+      displayName: 'Nama tampilan',
+      displayNameHint: 'Opsional. Nama ini tampil di dasbor.',
+      email: 'Email',
+      password: 'Kata sandi',
+      passwordHint: 'Minimal 6 karakter.',
+      submit: 'Daftar',
+      submitting: 'Sedang mendaftar...',
+      haveAccount: 'Sudah punya akun?',
+      loginLink: 'Masuk',
+    },
+    confirmEmail: {
+      title: 'Cek email kamu',
+      body: 'Kami sudah mengirim tautan konfirmasi. Buka tautan itu, lalu masuk.',
+      action: 'Ke halaman masuk',
+    },
+    backHome: 'Kembali ke beranda',
+    errors: {
+      invalid_credentials: 'Email atau kata sandi belum cocok.',
+      email_not_confirmed: 'Email belum dikonfirmasi. Buka tautan di email kamu dulu.',
+      user_already_exists: 'Email ini sudah terdaftar. Coba masuk.',
+      weak_password: 'Kata sandi terlalu lemah. Gunakan minimal 6 karakter.',
+      rate_limited: 'Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.',
+      network: 'Koneksi terputus. Periksa sinyal, lalu coba lagi.',
+      unknown: 'Ada yang belum beres. Coba lagi.',
+    },
+    validation: {
+      emailRequired: 'Isi email dulu.',
+      emailInvalid: 'Format email belum benar.',
+      passwordRequired: 'Isi kata sandi dulu.',
+      passwordMin: 'Kata sandi minimal 6 karakter.',
+      displayNameMax: 'Nama tampilan maksimal 80 karakter.',
+    },
+  },
   status: {
     draft: 'Draf',
     published: 'Terbit',
@@ -34,14 +81,6 @@ export const id = {
     comingSoon: 'Pemutar kuis sedang disiapkan.',
   },
   placeholders: {
-    login: {
-      title: 'Masuk',
-      description: 'Halaman masuk akan tersedia di Fase 1.',
-    },
-    signup: {
-      title: 'Daftar',
-      description: 'Halaman daftar akan tersedia di Fase 1.',
-    },
     dashboard: {
       title: 'Dasbor',
       description: 'Daftar kuis akan tersedia di Fase 3.',

@@ -3,6 +3,7 @@ export type QuizErrorCode =
   | 'quiz_not_found'
   | 'quiz_has_attempts'
   | 'invalid_quiz'
+  | 'delete_failed'
   | 'load_failed'
   | 'network'
   | 'unknown'
@@ -64,4 +65,16 @@ export function mapQuizLoadError(error: unknown): QuizApiError {
   const mapped = mapQuizError(error)
   if (mapped.code === 'network' || mapped.code === 'quiz_not_found') return mapped
   return new QuizApiError('load_failed')
+}
+
+export function mapQuizDeleteError(error: unknown): QuizApiError {
+  const mapped = mapQuizError(error)
+  if (
+    mapped.code === 'network' ||
+    mapped.code === 'quiz_not_found' ||
+    mapped.code === 'not_authenticated'
+  ) {
+    return mapped
+  }
+  return new QuizApiError('delete_failed')
 }

@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
+import { DashboardPage } from '@/features/creator/dashboard/DashboardPage'
 import { QuizEditorPage } from '@/features/creator/quiz/QuizEditorPage'
 import { PlayerHomePage } from '@/features/player/PlayerHomePage'
 import { id } from '@/i18n/id'
@@ -18,15 +19,7 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<CreatorLayout />}>
-          <Route
-            path="/dashboard"
-            element={
-              <PlaceholderPage
-                title={id.placeholders.dashboard.title}
-                description={id.placeholders.dashboard.description}
-              />
-            }
-          />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/quizzes/new" element={<QuizEditorPage />} />
           <Route path="/quizzes/:id/edit" element={<QuizEditorPage />} />
           <Route

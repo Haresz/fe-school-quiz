@@ -7,7 +7,12 @@ import type {
   QuizStatus,
   QuestionType,
 } from '@/types/database'
-import { QuizApiError, mapQuizError, mapQuizLoadError } from './quiz-errors'
+import {
+  QuizApiError,
+  mapQuizDeleteError,
+  mapQuizError,
+  mapQuizLoadError,
+} from './quiz-errors'
 
 export type QuizEditorOption = {
   key: string
@@ -72,6 +77,17 @@ export type QuizSavePayload = {
 export type SavedQuiz = {
   id: string
   share_code: string
+}
+
+export type CreatorQuizSummary = {
+  id: string
+  title: string
+  description: string | null
+  status: QuizStatus
+  source: QuizSource
+  share_code: string
+  created_at: string
+  updated_at: string
 }
 
 type QuizRecord = {
@@ -169,6 +185,30 @@ export async function getQuizForEdit(id: string): Promise<QuizEditorData> {
     revealAnswers: settings.reveal_answers === true,
     questions: questions.map((question) => mapQuestion(question, keysById.get(question.id))),
   }
+}
+
+export async function listCreatorQuizzes(
+  ownerId: string,
+): Promise<CreatorQuizSummary[]> {
+  const { data, error } = await supabase
+    .from('quizzes')
+    .select('id, title, description, status, source, share_code, created_at, updated_at')
+    .eq('owner_id', ownerId)
+    .order('updated_at', { ascending: false })
+
+  if (error) throw mapQuizLoadError(error)
+
+  return (data ?? []) as CreatorQuizSummary[]
+}
+
+export async function deleteQuiz(id: string, ownerId: string): Promise<void> {
+  const { error } = await supabase
+    .from('quizzes')
+    .delete()
+    .eq('id', id)
+    .eq('owner_id', ownerId)
+
+  if (error) throw mapQuizDeleteError(error)
 }
 
 export async function saveQuiz(payload: QuizSavePayload): Promise<SavedQuiz> {

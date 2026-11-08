@@ -24,6 +24,13 @@ vi.mock('@/api/auth', () => ({
   signUp: vi.fn(),
 }))
 
+vi.mock('@/api/quizzes', () => ({
+  listCreatorQuizzes: vi.fn().mockResolvedValue([]),
+  deleteQuiz: vi.fn(),
+  getQuizForEdit: vi.fn(),
+  saveQuiz: vi.fn(),
+}))
+
 const mockedGetSession = vi.mocked(getSession)
 const mockedOnAuthStateChange = vi.mocked(onAuthStateChange)
 const mockedSignIn = vi.mocked(signIn)
@@ -79,7 +86,7 @@ describe('auth', () => {
     mockedGetSession.mockResolvedValue(fakeSession)
     renderAuthApp('/dashboard')
 
-    expect(await screen.findByRole('heading', { name: id.placeholders.dashboard.title })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: id.dashboard.title })).toBeInTheDocument()
   })
 
   it('masuk lalu diarahkan ke dasbor', async () => {
@@ -96,7 +103,7 @@ describe('auth', () => {
       expect(mockedSignIn).toHaveBeenCalledWith('guru@example.com', 'rahasia123')
     })
     expect(
-      await screen.findByRole('heading', { name: id.placeholders.dashboard.title }),
+      await screen.findByRole('heading', { name: id.dashboard.title }),
     ).toBeInTheDocument()
   })
 
@@ -149,7 +156,7 @@ describe('auth', () => {
     const user = userEvent.setup()
     renderAuthApp('/dashboard')
 
-    await screen.findByRole('heading', { name: id.placeholders.dashboard.title })
+    await screen.findByRole('heading', { name: id.dashboard.title })
     await user.click(screen.getByRole('button', { name: id.nav.logout }))
 
     await waitFor(() => {

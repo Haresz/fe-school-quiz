@@ -3,6 +3,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
 import { DashboardPage } from '@/features/creator/dashboard/DashboardPage'
 import { QuizEditorPage } from '@/features/creator/quiz/QuizEditorPage'
+import { PlayQuizPage } from '@/features/player/PlayQuizPage'
 import { PlayerHomePage } from '@/features/player/PlayerHomePage'
 import { id } from '@/i18n/id'
 import { CreatorLayout } from '@/routes/CreatorLayout'
@@ -34,15 +35,7 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route
-        path="/play/:code"
-        element={
-          <PlaceholderPage
-            title={id.placeholders.play.title}
-            description={id.placeholders.play.description}
-          />
-        }
-      />
+      <Route path="/play/:code" element={<PlayQuizPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

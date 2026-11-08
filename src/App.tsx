@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
+import { QuizEditorPage } from '@/features/creator/quiz/QuizEditorPage'
 import { PlayerHomePage } from '@/features/player/PlayerHomePage'
 import { id } from '@/i18n/id'
 import { CreatorLayout } from '@/routes/CreatorLayout'
@@ -26,24 +27,8 @@ export default function App() {
               />
             }
           />
-          <Route
-            path="/quizzes/new"
-            element={
-              <PlaceholderPage
-                title={id.placeholders.newQuiz.title}
-                description={id.placeholders.newQuiz.description}
-              />
-            }
-          />
-          <Route
-            path="/quizzes/:id/edit"
-            element={
-              <PlaceholderPage
-                title={id.placeholders.editQuiz.title}
-                description={id.placeholders.editQuiz.description}
-              />
-            }
-          />
+          <Route path="/quizzes/new" element={<QuizEditorPage />} />
+          <Route path="/quizzes/:id/edit" element={<QuizEditorPage />} />
           <Route
             path="/quizzes/:id/results"
             element={

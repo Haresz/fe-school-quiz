@@ -1,14 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
-import { getQuizResults } from './results'
+import {
+  getAttemptDetail,
+  getQuizResults,
+  getQuizStats,
+} from './results'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
+    rpc: vi.fn(),
   },
 }))
 
 const mockedFrom = vi.mocked(supabase.from)
+const mockedRpc = vi.mocked(supabase.rpc)
 
 const quizRow = {
   id: 'quiz-1',
@@ -144,6 +150,234 @@ describe('getQuizResults', () => {
       )
 
     await expect(getQuizResults('quiz-1', 'user-1')).rejects.toMatchObject({
+      code: 'load_failed',
+    })
+  })
+})
+
+const attemptDetailRow = {
+  items: [
+    {
+      question_id: 'q2',
+      position: 2,
+      type: 'text',
+      body: 'Ibu kota Indonesia?',
+      answer: 'Jakarta',
+      answered: true,
+      is_correct: false,
+      points_awarded: 0,
+      points: 1,
+      correct_answer: 'Jakarta',
+      accepted_answers: ['jakarta', 'dki jakarta'],
+    },
+    {
+      question_id: 'q1',
+      position: 1,
+      type: 'multiple_choice',
+      body: '1/2 + 1/4 = ?',
+      options: ['1/4', '3/4', '1'],
+      answer: 1,
+      answered: true,
+      is_correct: true,
+      points_awarded: 1,
+      points: 1,
+      correct_index: 1,
+      explanation: 'Samakan penyebutnya dulu.',
+    },
+  ],
+  attempt: {
+    id: 'attempt-1',
+    quiz_id: 'quiz-1',
+    participant_name: 'Rani',
+    score: 2,
+    max_score: 3,
+    created_at: '2026-11-08T10:30:00.000Z',
+  },
+}
+
+describe('getAttemptDetail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('memanggil RPC dan merapikan jawaban sesuai urutan soal', async () => {
+    mockedRpc.mockResolvedValue({ data: attemptDetailRow, error: null } as never)
+
+    const detail = await getAttemptDetail('attempt-1')
+
+    expect(mockedRpc).toHaveBeenCalledWith('get_attempt_detail', {
+      p_attempt_id: 'attempt-1',
+    })
+    expect(detail).toMatchObject({
+      attemptId: 'attempt-1',
+      quizId: 'quiz-1',
+      quizTitle: '',
+      participantName: 'Rani',
+      score: 2,
+      maxScore: 3,
+    })
+    expect(detail.answers.map((answer) => answer.questionId)).toEqual([
+      'q1',
+      'q2',
+    ])
+    expect(detail.answers[0]).toMatchObject({
+      type: 'multiple_choice',
+      answer: 1,
+      isCorrect: true,
+      pointsAwarded: 1,
+      correctIndex: 1,
+      explanation: 'Samakan penyebutnya dulu.',
+    })
+    expect(detail.answers[1]).toMatchObject({
+      type: 'text',
+      answer: 'Jakarta',
+      isCorrect: false,
+      correctAnswer: 'Jakarta',
+    })
+  })
+
+  it('menerima bentuk camelCase yang dibungkus attempt', async () => {
+    mockedRpc.mockResolvedValue({
+      data: {
+        attempt: {
+          id: 'attempt-1',
+          quizId: 'quiz-1',
+          quizTitle: 'Pecahan kelas 5',
+          participantName: 'Budi',
+          score: 1,
+          maxScore: 1,
+          createdAt: '2026-11-09T08:00:00.000Z',
+          reviews: [
+            {
+              questionId: 'q1',
+              position: 1,
+              type: 'multiple_choice',
+              body: '1/2 + 1/4 = ?',
+              options: ['1/4', '3/4', '1'],
+              answer: { value: 1 },
+              isCorrect: true,
+              pointsAwarded: 1,
+              correctIndex: 1,
+            },
+          ],
+        },
+      },
+      error: null,
+    } as never)
+
+    const detail = await getAttemptDetail('attempt-1')
+
+    expect(detail.participantName).toBe('Budi')
+    expect(detail.answers).toHaveLength(1)
+    expect(detail.answers[0].answer).toBe(1)
+    expect(detail.answers[0].isCorrect).toBe(true)
+  })
+
+  it('menandai pengerjaan yang tidak ditemukan', async () => {
+    mockedRpc.mockResolvedValue({ data: null, error: null } as never)
+
+    await expect(getAttemptDetail('attempt-x')).rejects.toMatchObject({
+      code: 'attempt_not_found',
+    })
+  })
+
+  it('memetakan kegagalan RPC', async () => {
+    mockedRpc.mockResolvedValue({
+      data: null,
+      error: { message: 'permission denied' },
+    } as never)
+
+    await expect(getAttemptDetail('attempt-1')).rejects.toMatchObject({
+      code: 'load_failed',
+    })
+  })
+})
+
+describe('getQuizStats', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('merapikan statistik per soal dari objek jsonb', async () => {
+    mockedRpc.mockResolvedValue({
+      data: {
+        attempt_count: 3,
+        average_score: 2.3,
+        max_score: 3,
+        question_stats: [
+          {
+            question_id: 'q2',
+            position: 2,
+            body: 'Ibu kota Indonesia?',
+            correct_count: 1,
+            answered_count: 2,
+          },
+          {
+            question_id: 'q1',
+            position: 1,
+            body: '1/2 + 1/4 = ?',
+            correct_count: 2,
+            answered_count: 2,
+          },
+        ],
+      },
+      error: null,
+    } as never)
+
+    const stats = await getQuizStats('quiz-1')
+
+    expect(mockedRpc).toHaveBeenCalledWith('get_quiz_stats', {
+      p_quiz_id: 'quiz-1',
+    })
+    expect(stats).toMatchObject({
+      attemptCount: 3,
+      averageScore: 2.3,
+      maxScore: 3,
+    })
+    expect(stats.questionStats.map((stat) => stat.questionId)).toEqual([
+      'q1',
+      'q2',
+    ])
+    expect(stats.questionStats[0].correctRate).toBe(100)
+    expect(stats.questionStats[1]).toMatchObject({
+      correctCount: 1,
+      answeredCount: 2,
+      correctRate: 50,
+    })
+  })
+
+  it('menerima daftar baris langsung dengan rate 0..1', async () => {
+    mockedRpc.mockResolvedValue({
+      data: [
+        {
+          questionId: 'q1',
+          questionBody: '1/2 + 1/4 = ?',
+          correctCount: 1,
+          totalAnswers: 4,
+          correctRate: 0.25,
+        },
+      ],
+      error: null,
+    } as never)
+
+    const stats = await getQuizStats('quiz-1')
+
+    expect(stats.questionStats[0]).toMatchObject({
+      questionId: 'q1',
+      body: '1/2 + 1/4 = ?',
+      correctCount: 1,
+      answeredCount: 4,
+      correctRate: 25,
+    })
+  })
+
+  it('memetakan kegagalan RPC statistik', async () => {
+    mockedRpc.mockResolvedValue({
+      data: null,
+      error: { message: 'permission denied' },
+    } as never)
+
+    await expect(getQuizStats('quiz-1')).rejects.toMatchObject({
       code: 'load_failed',
     })
   })

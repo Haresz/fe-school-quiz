@@ -34,6 +34,7 @@ Jangan pernah menaruh service role key, secret key, atau token OpenRouter di fro
 | `npm run typecheck` | Memeriksa TypeScript tanpa emit. |
 | `npm run lint` | Menjalankan ESLint. |
 | `npm test` | Menjalankan seluruh test Vitest sekali. |
+| `npm run icons` | Membuat ulang favicon, ikon PWA, dan `manifest.webmanifest` di `public/`. |
 | `npm run test:watch` | Menjalankan test dalam mode watch. |
 
 ## Arsitektur

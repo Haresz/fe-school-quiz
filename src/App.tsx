@@ -4,6 +4,7 @@ import { SignupPage } from '@/features/auth/SignupPage'
 import { AiQuizPage } from '@/features/creator/ai/AiQuizPage'
 import { DashboardPage } from '@/features/creator/dashboard/DashboardPage'
 import { QuizEditorPage } from '@/features/creator/quiz/QuizEditorPage'
+import { QuizAttemptDetailPage } from '@/features/creator/results/QuizAttemptDetailPage'
 import { QuizResultsPage } from '@/features/creator/results/QuizResultsPage'
 import { PlayQuizPage } from '@/features/player/PlayQuizPage'
 import { PlayerHomePage } from '@/features/player/PlayerHomePage'
@@ -25,6 +26,10 @@ export default function App() {
           <Route path="/quizzes/new" element={<QuizEditorPage />} />
           <Route path="/quizzes/:id/edit" element={<QuizEditorPage />} />
           <Route path="/quizzes/:id/results" element={<QuizResultsPage />} />
+          <Route
+            path="/quizzes/:id/results/:attemptId"
+            element={<QuizAttemptDetailPage />}
+          />
         </Route>
       </Route>
 

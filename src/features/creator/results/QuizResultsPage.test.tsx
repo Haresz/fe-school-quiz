@@ -7,8 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { QuizApiError } from '@/api/quiz-errors'
 import {
   getQuizResults,
+  getQuizStats,
   type QuizAttemptSummary,
   type QuizResults,
+  type QuizStats,
 } from '@/api/results'
 import {
   AuthContext,
@@ -20,9 +22,11 @@ import { QuizResultsPage } from './QuizResultsPage'
 
 vi.mock('@/api/results', () => ({
   getQuizResults: vi.fn(),
+  getQuizStats: vi.fn(),
 }))
 
 const mockedGetQuizResults = vi.mocked(getQuizResults)
+const mockedGetQuizStats = vi.mocked(getQuizStats)
 
 const fakeUser = {
   id: 'user-1',
@@ -60,6 +64,30 @@ const attempts: QuizAttemptSummary[] = [
   },
 ]
 
+const stats: QuizStats = {
+  attemptCount: 2,
+  averageScore: 3.5,
+  maxScore: 5,
+  questionStats: [
+    {
+      questionId: 'q1',
+      position: 1,
+      body: '1/2 + 1/4 = ?',
+      correctCount: 2,
+      answeredCount: 2,
+      correctRate: 100,
+    },
+    {
+      questionId: 'q2',
+      position: 2,
+      body: 'Ibu kota Indonesia?',
+      correctCount: 1,
+      answeredCount: 2,
+      correctRate: 50,
+    },
+  ],
+}
+
 const results: QuizResults = {
   quiz: {
     id: 'quiz-1',
@@ -96,6 +124,7 @@ describe('QuizResultsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockedGetQuizResults.mockResolvedValue(results)
+    mockedGetQuizStats.mockResolvedValue(stats)
   })
 
   it('menampilkan ringkasan dan daftar pengerjaan', async () => {
@@ -121,6 +150,46 @@ describe('QuizResultsPage', () => {
     expect(within(budi).getByText('60%')).toBeInTheDocument()
 
     expect(screen.getAllByRole('article')).toHaveLength(2)
+
+    expect(
+      screen.getByRole('link', { name: /Rani/ }),
+    ).toHaveAttribute('href', '/quizzes/quiz-1/results/attempt-2')
+  })
+
+  it('menampilkan ketepatan per soal', async () => {
+    renderResults()
+
+    expect(
+      await screen.findByRole('heading', { name: id.results.stats.title }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('1/2 + 1/4 = ?')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        formatMessage(id.results.stats.correctOf, {
+          correct: 1,
+          total: 2,
+        }),
+      ),
+    ).toBeInTheDocument()
+    expect(mockedGetQuizStats).toHaveBeenCalledWith('quiz-1')
+  })
+
+  it('bisa mencoba lagi saat statistik gagal dimuat', async () => {
+    mockedGetQuizStats
+      .mockRejectedValueOnce(new QuizApiError('load_failed'))
+      .mockResolvedValueOnce(stats)
+    const user = userEvent.setup()
+    renderResults()
+
+    expect(
+      await screen.findByText(id.results.stats.error),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: id.common.retry }))
+
+    expect(
+      await screen.findByText('1/2 + 1/4 = ?'),
+    ).toBeInTheDocument()
   })
 
   it('mengarahkan pembuat membagikan kode saat belum ada pengerjaan', async () => {

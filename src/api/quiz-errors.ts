@@ -1,6 +1,7 @@
 export type QuizErrorCode =
   | 'not_authenticated'
   | 'quiz_not_found'
+  | 'attempt_not_found'
   | 'quiz_has_attempts'
   | 'invalid_quiz'
   | 'delete_failed'
@@ -44,6 +45,8 @@ export function mapQuizError(error: unknown): QuizApiError {
 
   if (message === 'not_authenticated') return new QuizApiError('not_authenticated')
   if (message === 'quiz_not_found') return new QuizApiError('quiz_not_found')
+  if (message === 'attempt_not_found')
+    return new QuizApiError('attempt_not_found')
   if (message === 'quiz_has_attempts') return new QuizApiError('quiz_has_attempts')
   if (message.startsWith('invalid_quiz')) {
     return new QuizApiError('invalid_quiz', message.replace(/^invalid_quiz:\s*/, ''))
@@ -63,7 +66,12 @@ export function mapQuizError(error: unknown): QuizApiError {
 
 export function mapQuizLoadError(error: unknown): QuizApiError {
   const mapped = mapQuizError(error)
-  if (mapped.code === 'network' || mapped.code === 'quiz_not_found') return mapped
+  if (
+    mapped.code === 'network' ||
+    mapped.code === 'quiz_not_found' ||
+    mapped.code === 'attempt_not_found'
+  )
+    return mapped
   return new QuizApiError('load_failed')
 }
 

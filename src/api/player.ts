@@ -1,5 +1,14 @@
 import { supabase } from '@/lib/supabase'
 import { normalizeQuizCode } from '@/lib/quiz-code'
+import {
+  asArray,
+  asRecord,
+  readBoolean,
+  readNumber,
+  readRecord,
+  readString,
+  readStringArray,
+} from '@/lib/unknown'
 import { readQuizTimer } from '@/lib/quiz-settings'
 import type {
   Json,
@@ -61,63 +70,6 @@ export type SubmitAttemptInput = {
   participantName: string
   answers: PlayerAnswer[]
   fallbackMaxScore: number
-}
-
-type UnknownRecord = Record<string, unknown>
-
-function asRecord(value: unknown): UnknownRecord | undefined {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as UnknownRecord
-  }
-  return undefined
-}
-
-function asArray(value: unknown): unknown[] | undefined {
-  return Array.isArray(value) ? value : undefined
-}
-
-function readRecord(value: unknown): UnknownRecord | undefined {
-  if (typeof value === 'string') {
-    try {
-      return asRecord(JSON.parse(value))
-    } catch {
-      return undefined
-    }
-  }
-  return asRecord(value)
-}
-
-function readString(value: unknown): string | undefined {
-  return typeof value === 'string' ? value : undefined
-}
-
-function readNumber(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string' && value.trim() !== '') {
-    const number = Number(value)
-    if (Number.isFinite(number)) return number
-  }
-  return undefined
-}
-
-function readBoolean(value: unknown): boolean | undefined {
-  return typeof value === 'boolean' ? value : undefined
-}
-
-function readStringArray(value: unknown): string[] | undefined {
-  const values = typeof value === 'string' ? safeJsonArray(value) : asArray(value)
-  if (!values) return undefined
-
-  const strings = values.filter((item): item is string => typeof item === 'string')
-  return strings.length === values.length ? strings : undefined
-}
-
-function safeJsonArray(value: string): unknown[] | undefined {
-  try {
-    return asArray(JSON.parse(value))
-  } catch {
-    return undefined
-  }
 }
 
 function normalizeQuestion(raw: unknown, index: number): PlayerQuestion {

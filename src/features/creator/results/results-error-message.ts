@@ -9,6 +9,8 @@ export function resultsErrorMessage(error: unknown): string {
       return id.results.errors.not_authenticated
     case 'quiz_not_found':
       return id.results.errors.quiz_not_found
+    case 'attempt_not_found':
+      return id.results.errors.attempt_not_found
     case 'load_failed':
       return id.results.errors.load_failed
     case 'network':

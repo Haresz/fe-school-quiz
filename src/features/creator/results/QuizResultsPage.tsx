@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   getQuizResults,
+  getQuizStats,
   type QuizAttemptSummary,
+  type QuizQuestionStat,
   type QuizResultsQuiz,
 } from '@/api/results'
 import { QuizApiError } from '@/api/quiz-errors'
@@ -17,26 +19,8 @@ import { Spinner } from '@/components/ui/Spinner'
 import { useAuth } from '@/features/auth/auth-context'
 import { id } from '@/i18n/id'
 import { formatMessage } from '@/lib/message'
+import { formatResultDate, percentOf } from './results-format'
 import { resultsErrorMessage } from './results-error-message'
-
-const dateFormatter = new Intl.DateTimeFormat('id-ID', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
-function formatDate(value: string): string {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return dateFormatter.format(date)
-}
-
-function percentOf(score: number, maxScore: number): number {
-  if (maxScore <= 0) return 0
-  return Math.min(100, Math.max(0, Math.round((score / maxScore) * 100)))
-}
 
 function getResultStats(attempts: QuizAttemptSummary[]) {
   const percents = attempts.map((attempt) =>
@@ -136,7 +120,91 @@ function ResultsHeader({
   )
 }
 
-function AttemptList({ attempts }: { attempts: QuizAttemptSummary[] }) {
+function QuestionStatsSection({
+  stats,
+  isPending,
+  isError,
+  onRetry,
+}: {
+  stats: QuizQuestionStat[] | null
+  isPending: boolean
+  isError: boolean
+  onRetry: () => void
+}) {
+  return (
+    <section aria-labelledby="question-stats-title" className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2
+          id="question-stats-title"
+          className="text-2xl font-semibold text-ink"
+        >
+          {id.results.stats.title}
+        </h2>
+        <p className="text-base text-ink-muted">{id.results.stats.hint}</p>
+      </div>
+
+      {isPending ? (
+        <Card>
+          <Spinner label={id.results.stats.loading} />
+        </Card>
+      ) : isError ? (
+        <ErrorState
+          description={id.results.stats.error}
+          onRetry={onRetry}
+          retryLabel={id.common.retry}
+        />
+      ) : !stats || stats.length === 0 ? (
+        <Card className="border-dashed">
+          <p className="text-base text-ink-muted">
+            {id.results.stats.noAnswers}
+          </p>
+        </Card>
+      ) : (
+        <ol className="divide-y divide-paper-line overflow-hidden rounded-card border border-paper-line bg-white">
+          {stats.map((stat) => (
+            <li key={stat.questionId} className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <p className="min-w-0 break-words text-lg font-semibold text-ink">
+                  {stat.body}
+                </p>
+                <p className="shrink-0 font-display text-2xl font-bold text-ink">
+                  {formatMessage(id.results.percent, {
+                    percent: stat.correctRate,
+                  })}
+                </p>
+              </div>
+              <p className="text-base text-ink-muted">
+                {stat.answeredCount > 0
+                  ? formatMessage(id.results.stats.correctOf, {
+                      correct: stat.correctCount,
+                      total: stat.answeredCount,
+                    })
+                  : id.results.stats.noAnswers}
+              </p>
+              <div
+                aria-hidden="true"
+                className="mt-2 h-2 overflow-hidden rounded-pill bg-paper-line"
+              >
+                <div
+                  className="h-full rounded-pill bg-green"
+                  style={{ width: `${stat.correctRate}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  )
+}
+
+function AttemptList({
+  quizId,
+  attempts,
+}: {
+  quizId: string
+  attempts: QuizAttemptSummary[]
+}) {
   return (
     <section aria-labelledby="attempts-title" className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -152,46 +220,55 @@ function AttemptList({ attempts }: { attempts: QuizAttemptSummary[] }) {
           const nameId = `attempt-${attempt.id}-name`
 
           return (
-            <li key={attempt.id} className="p-5">
-              <article aria-labelledby={nameId} className="space-y-3">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3
-                      id={nameId}
-                      className="break-words text-xl font-semibold text-ink"
-                    >
-                      {attempt.participantName}
-                    </h3>
-                    <p className="text-base text-ink-muted">
-                      <time dateTime={attempt.createdAt}>
-                        {formatDate(attempt.createdAt)}
-                      </time>
-                    </p>
+            <li key={attempt.id}>
+              <Link
+                to={`/quizzes/${quizId}/results/${attempt.id}`}
+                className="block p-5 transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-blue"
+              >
+                <article aria-labelledby={nameId} className="space-y-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3
+                        id={nameId}
+                        className="break-words text-xl font-semibold text-ink"
+                      >
+                        {attempt.participantName}
+                      </h3>
+                      <p className="text-base text-ink-muted">
+                        <time dateTime={attempt.createdAt}>
+                          {formatResultDate(attempt.createdAt)}
+                        </time>
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 rounded-input border border-paper-line bg-paper px-3 py-2 text-right">
+                      <p className="font-display text-2xl font-bold text-ink">
+                        {formatMessage(id.results.scoreValue, {
+                          score: attempt.score,
+                          max: attempt.maxScore,
+                        })}
+                      </p>
+                      <p className="text-base font-bold text-ink-muted">
+                        {formatMessage(id.results.percent, { percent })}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="shrink-0 rounded-input border border-paper-line bg-paper px-3 py-2 text-right">
-                    <p className="font-display text-2xl font-bold text-ink">
-                      {formatMessage(id.results.scoreValue, {
-                        score: attempt.score,
-                        max: attempt.maxScore,
-                      })}
-                    </p>
-                    <p className="text-base font-bold text-ink-muted">
-                      {formatMessage(id.results.percent, { percent })}
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  aria-hidden="true"
-                  className="h-2 overflow-hidden rounded-pill bg-paper-line"
-                >
                   <div
-                    className="h-full rounded-pill bg-blue"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-              </article>
+                    aria-hidden="true"
+                    className="h-2 overflow-hidden rounded-pill bg-paper-line"
+                  >
+                    <div
+                      className="h-full rounded-pill bg-blue"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+
+                  <p className="text-base font-bold text-blue">
+                    {id.results.detail.view}
+                  </p>
+                </article>
+              </Link>
             </li>
           )
         })}
@@ -211,6 +288,14 @@ export function QuizResultsPage() {
     queryKey: ['quiz-results', quizId, ownerId],
     queryFn: () => getQuizResults(quizId as string, ownerId as string),
     enabled: Boolean(quizId && ownerId),
+  })
+
+  const statsQuery = useQuery({
+    queryKey: ['quiz-stats', quizId, ownerId],
+    queryFn: () => getQuizStats(quizId as string),
+    enabled:
+      Boolean(quizId && ownerId) &&
+      (resultsQuery.data?.attempts.length ?? 0) > 0,
   })
 
   if (resultsQuery.isPending) {
@@ -351,7 +436,16 @@ export function QuizResultsPage() {
             </div>
           </dl>
 
-          <AttemptList attempts={attempts} />
+          <QuestionStatsSection
+            stats={statsQuery.data?.questionStats ?? null}
+            isPending={statsQuery.isPending}
+            isError={statsQuery.isError}
+            onRetry={() => {
+              void statsQuery.refetch()
+            }}
+          />
+
+          <AttemptList quizId={quiz.id} attempts={attempts} />
         </>
       )}
     </div>

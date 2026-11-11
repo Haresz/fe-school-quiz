@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Quiz Maker">
+  <rect width="512" height="512" rx="112" fill="#2750d8"/>
+  <path d="M160 96h192a28 28 0 0 1 28 28v264a28 28 0 0 1 -28 28h-192a28 28 0 0 1 -28 -28v-264a28 28 0 0 1 28 -28z" fill="#ffffff"/>
+  <path d="M190 168h132a10 10 0 0 1 10 10v0a10 10 0 0 1 -10 10h-132a10 10 0 0 1 -10 -10v0a10 10 0 0 1 10 -10zM190 232h100a10 10 0 0 1 10 10v0a10 10 0 0 1 -10 10h-100a10 10 0 0 1 -10 -10v0a10 10 0 0 1 10 -10z" fill="#2750d8"/>
+  <path d="M 188 300 L 238 352 L 336 244" fill="none" stroke="#ffc51f" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

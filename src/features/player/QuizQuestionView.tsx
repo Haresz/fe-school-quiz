@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/Button'
 import { id } from '@/i18n/id'
 import { cn } from '@/lib/cn'
 import { formatMessage } from '@/lib/message'
-
-export type QuizAnswerValue = number | string
+import { TimerBadge } from './TimerBadge'
+import type { QuizAnswerValue } from './quiz-answers'
 
 export type QuizQuestionViewProps = {
   quizTitle: string
@@ -13,9 +13,15 @@ export type QuizQuestionViewProps = {
   index: number
   total: number
   answer: QuizAnswerValue | undefined
+  optionOrder: number[]
+  timer: { remainingSeconds: number; totalSeconds: number } | null
+  notice: string | null
   onAnswer: (value: QuizAnswerValue) => void
   onBack: () => void
   onNext: () => void
+  onReview: (() => void) | null
+  onRetry: () => void
+  canGoBack: boolean
   isLast: boolean
   isSubmitting: boolean
   error: string | null
@@ -46,9 +52,15 @@ export function QuizQuestionView({
   index,
   total,
   answer,
+  optionOrder,
+  timer,
+  notice,
   onAnswer,
   onBack,
   onNext,
+  onReview,
+  onRetry,
+  canGoBack,
   isLast,
   isSubmitting,
   error,
@@ -95,6 +107,20 @@ export function QuizQuestionView({
               />
             ))}
           </div>
+          {timer ? (
+            <TimerBadge
+              remainingSeconds={timer.remainingSeconds}
+              totalSeconds={timer.totalSeconds}
+            />
+          ) : null}
+          {notice ? (
+            <p
+              role="status"
+              className="rounded-input border-2 border-yellow bg-yellow-tint px-3 py-2 text-lg font-bold text-ink"
+            >
+              {notice}
+            </p>
+          ) : null}
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 flex min-h-[calc(100dvh-9rem)] flex-col">
@@ -116,13 +142,16 @@ export function QuizQuestionView({
                   aria-labelledby={questionHeadingId}
                   className="space-y-3"
                 >
-                  {(question.options ?? []).map((option, optionIndex) => {
-                    const letter = optionLetter(optionIndex)
-                    const isSelected = selectedOption === optionIndex
+                  {optionOrder.map((originalIndex, displayIndex) => {
+                    const option = question.options?.[originalIndex]
+                    if (option === undefined) return null
+
+                    const letter = optionLetter(displayIndex)
+                    const isSelected = selectedOption === originalIndex
 
                     return (
                       <label
-                        key={`${question.id}-${optionIndex}`}
+                        key={`${question.id}-${originalIndex}`}
                         className={cn(
                           'flex min-h-14 cursor-pointer items-center gap-3 rounded-card border-2 border-ink p-3 transition-colors focus-within:ring-[3px] focus-within:ring-blue focus-within:ring-offset-2 focus-within:ring-offset-paper',
                           isSelected ? 'bg-blue-tint' : 'bg-white hover:bg-blue-tint/40',
@@ -132,9 +161,9 @@ export function QuizQuestionView({
                         <input
                           type="radio"
                           name={`answer-${question.id}`}
-                          value={optionIndex}
+                          value={originalIndex}
                           checked={isSelected}
-                          onChange={() => onAnswer(optionIndex)}
+                          onChange={() => onAnswer(originalIndex)}
                           disabled={isSubmitting}
                           aria-label={`${letter}. ${option}`}
                           className="sr-only"
@@ -190,17 +219,38 @@ export function QuizQuestionView({
               {submitError ? (
                 <div
                   role="alert"
-                  className="space-y-1 rounded-input border-2 border-coral bg-coral-tint p-3"
+                  className="space-y-2 rounded-input border-2 border-coral bg-coral-tint p-3"
                 >
                   <p className="text-lg font-bold text-coral">
                     {id.player.question.submitErrorTitle}
                   </p>
                   <p className="text-lg text-ink">{submitError}</p>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    onClick={onRetry}
+                    disabled={isSubmitting}
+                  >
+                    {id.player.question.retry}
+                  </Button>
                 </div>
               ) : null}
 
+              {onReview && !submitError ? (
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  type="button"
+                  onClick={onReview}
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  {id.player.question.review}
+                </Button>
+              ) : null}
+
               <div className="flex gap-2">
-                {index > 0 ? (
+                {index > 0 && canGoBack ? (
                   <Button
                     variant="secondary"
                     size="lg"

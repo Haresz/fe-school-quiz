@@ -7,10 +7,12 @@ import { id } from '@/i18n/id'
 import { cn } from '@/lib/cn'
 import { formatMessage } from '@/lib/message'
 import { getResultSummary } from './player-result'
-import type { QuizAnswerValue } from './QuizQuestionView'
+import type { QuizAnswerValue } from './quiz-answers'
 
 export type QuizResultViewProps = {
   quiz: PlayerQuiz
+  questions: PlayerQuiz['questions']
+  optionOrders: Record<string, number[]>
   participantName: string
   answers: Record<string, QuizAnswerValue>
   result: {
@@ -25,18 +27,25 @@ function optionLetter(index: number): string {
   return String.fromCharCode(65 + index)
 }
 
-function formatOption(question: PlayerQuiz['questions'][number], index: number) {
+function formatOption(
+  question: PlayerQuiz['questions'][number],
+  index: number,
+  optionOrder: number[] | undefined,
+) {
   const option = question.options?.[index]
   if (option === undefined) return null
-  return `${optionLetter(index)}. ${option}`
+  const displayIndex = optionOrder ? optionOrder.indexOf(index) : index
+  const letterIndex = displayIndex >= 0 ? displayIndex : index
+  return `${optionLetter(letterIndex)}. ${option}`
 }
 
 function formatUserAnswer(
   question: PlayerQuiz['questions'][number],
   answer: QuizAnswerValue | undefined,
+  optionOrder: number[] | undefined,
 ): string {
   if (typeof answer === 'number') {
-    return formatOption(question, answer) ?? id.player.result.noAnswer
+    return formatOption(question, answer, optionOrder) ?? id.player.result.noAnswer
   }
 
   if (typeof answer === 'string' && answer.trim()) {
@@ -49,10 +58,13 @@ function formatUserAnswer(
 function getCorrectAnswer(
   question: PlayerQuiz['questions'][number],
   review: PlayerReview | undefined,
+  optionOrder: number[] | undefined,
 ): string | null {
   if (!review) return null
   if (review.correctAnswer) return review.correctAnswer
-  if (review.correctIndex !== null) return formatOption(question, review.correctIndex)
+  if (review.correctIndex !== null) {
+    return formatOption(question, review.correctIndex, optionOrder)
+  }
   return null
 }
 
@@ -101,6 +113,8 @@ function StatusIcon({ correct }: { correct: boolean }) {
 
 export function QuizResultView({
   quiz,
+  questions,
+  optionOrders,
   participantName,
   answers,
   result,
@@ -110,7 +124,7 @@ export function QuizResultView({
   const reviewsByQuestion = new Map(
     result.reviews.map((review) => [review.questionId, review]),
   )
-  const reviewedQuestions = quiz.questions.filter((question) =>
+  const reviewedQuestions = questions.filter((question) =>
     reviewsByQuestion.has(question.id),
   )
   const showReview = quiz.revealAnswers && reviewedQuestions.length > 0
@@ -159,11 +173,12 @@ export function QuizResultView({
           </h2>
 
           <ol className="space-y-3">
-            {quiz.questions.map((question, questionIndex) => {
+            {questions.map((question, questionIndex) => {
               const review = reviewsByQuestion.get(question.id)
               if (!review) return null
               const correct = review.isCorrect
-              const correctAnswer = getCorrectAnswer(question, review)
+              const optionOrder = optionOrders[question.id]
+              const correctAnswer = getCorrectAnswer(question, review, optionOrder)
 
               return (
                 <li key={question.id}>
@@ -196,7 +211,11 @@ export function QuizResultView({
                         {id.player.result.yourAnswer}
                       </p>
                       <p className="text-lg text-ink">
-                        {formatUserAnswer(question, answers[question.id])}
+                        {formatUserAnswer(
+                          question,
+                          answers[question.id],
+                          optionOrder,
+                        )}
                       </p>
                     </div>
 

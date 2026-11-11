@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { id } from '@/i18n/id'
 import {
   buildQuizSavePayload,
+  buildQuizSettings,
   createBlankQuestion,
   emptyQuizFormValues,
+  mapEditorDataToForm,
   quizFormSchema,
 } from './quiz-form'
 
@@ -134,6 +136,11 @@ describe('buildQuizSavePayload', () => {
       description: ' Latihan tambah ',
       status: 'published',
       revealAnswers: false,
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      timerMode: 'none',
+      perQuestionSeconds: '30',
+      totalMinutes: '20',
       questions: [question],
     })
 
@@ -141,6 +148,7 @@ describe('buildQuizSavePayload', () => {
       id: 'quiz-1',
       source: 'ai',
       materialId: 'material-1',
+      baseSettings: {},
     })
 
     expect(payload).toMatchObject({
@@ -150,7 +158,12 @@ describe('buildQuizSavePayload', () => {
       description: 'Latihan tambah',
       source: 'ai',
       status: 'published',
-      settings: { reveal_answers: false },
+      settings: {
+        reveal_answers: false,
+        shuffle_questions: true,
+        shuffle_options: true,
+        timer: { mode: 'none' },
+      },
     })
     expect(payload.questions).toEqual([
       {
@@ -183,6 +196,7 @@ describe('buildQuizSavePayload', () => {
     const payload = buildQuizSavePayload(values, {
       source: 'manual',
       materialId: null,
+      baseSettings: {},
     })
 
     expect(payload.id).toBeUndefined()
@@ -196,5 +210,94 @@ describe('buildQuizSavePayload', () => {
         points: 1,
       },
     ])
+  })
+})
+
+describe('pengaturan kuis', () => {
+  function validForm() {
+    const question = {
+      ...createBlankQuestion('text'),
+      body: 'Ibu kota Indonesia?',
+      acceptedAnswers: [{ key: 'answer', text: 'Jakarta' }],
+    }
+
+    return {
+      ...emptyQuizFormValues(),
+      title: 'IPS',
+      questions: [question],
+    }
+  }
+
+  it('mewajibkan waktu per soal 5-600 detik', () => {
+    const result = quizFormSchema.safeParse({
+      ...validForm(),
+      timerMode: 'per_question',
+      perQuestionSeconds: '4',
+    })
+
+    expect(result.success).toBe(false)
+    expect(messages(result)).toContain(id.editor.validation.timerPerQuestionRange)
+  })
+
+  it('mewajibkan waktu total 1-120 menit', () => {
+    const result = quizFormSchema.safeParse({
+      ...validForm(),
+      timerMode: 'total',
+      totalMinutes: '121',
+    })
+
+    expect(result.success).toBe(false)
+    expect(messages(result)).toContain(id.editor.validation.timerTotalRange)
+  })
+
+  it('menyimpan waktu total sebagai detik dan mempertahankan kunci lama', () => {
+    const values = quizFormSchema.parse({
+      ...validForm(),
+      timerMode: 'total',
+      totalMinutes: '20',
+    })
+
+    const settings = buildQuizSettings(values, {
+      reveal_answers: false,
+      shuffle_questions: false,
+      shuffle_options: false,
+      timer: { mode: 'none' },
+      legacy_note: 'dipertahankan',
+    })
+
+    expect(settings).toEqual({
+      reveal_answers: true,
+      shuffle_questions: true,
+      shuffle_options: true,
+      timer: { mode: 'total', seconds: 1200 },
+      legacy_note: 'dipertahankan',
+    })
+  })
+
+  it('membulatkan waktu total ke atas ke menit penuh saat memuat', () => {
+    function editorDataWithTotalSeconds(seconds: number) {
+      return {
+        id: 'quiz-1',
+        title: 'IPS',
+        description: '',
+        source: 'manual',
+        status: 'published',
+        materialId: null,
+        shareCode: 'AB12CD',
+        hasAttempts: false,
+        settings: {},
+        revealAnswers: true,
+        shuffleQuestions: false,
+        shuffleOptions: false,
+        timer: { mode: 'total', seconds },
+        questions: [],
+      } as Parameters<typeof mapEditorDataToForm>[0]
+    }
+
+    expect(mapEditorDataToForm(editorDataWithTotalSeconds(7200)).totalMinutes).toBe('120')
+    expect(mapEditorDataToForm(editorDataWithTotalSeconds(60)).totalMinutes).toBe('1')
+    expect(mapEditorDataToForm(editorDataWithTotalSeconds(7141)).totalMinutes).toBe('120')
+    expect(mapEditorDataToForm(editorDataWithTotalSeconds(119 * 60 + 1)).totalMinutes).toBe('120')
+    expect(mapEditorDataToForm(editorDataWithTotalSeconds(119 * 60)).totalMinutes).toBe('119')
   })
 })

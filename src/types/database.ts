@@ -11,8 +11,17 @@ export type QuizSource = 'manual' | 'ai'
 export type QuizStatus = 'draft' | 'published'
 export type QuestionType = 'multiple_choice' | 'text'
 
+export type QuizTimerSettings =
+  | { mode: 'none' }
+  | { mode: 'per_question'; seconds: number }
+  | { mode: 'total'; seconds: number }
+
 export type QuizSettings = {
   reveal_answers?: boolean
+  shuffle_questions?: boolean
+  shuffle_options?: boolean
+  timer?: QuizTimerSettings
+  [key: string]: unknown
 }
 
 export type ProfileRow = {

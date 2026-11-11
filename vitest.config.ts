@@ -11,9 +11,10 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    css: true,
-    pool: 'forks',
-    maxWorkers: 1,
+    css: false,
+    pool: 'threads',
+    maxWorkers: 2,
+    isolate: true,
     env: {
       VITE_SUPABASE_URL: 'http://localhost:54321',
       VITE_SUPABASE_ANON_KEY: 'test-anon-key',

@@ -7,6 +7,7 @@ import type { AiQuizDraft } from '@/api/ai'
 import {
   getQuizForEdit,
   saveQuiz,
+  updateQuizMeta,
   type QuizEditorData,
   type SavedQuiz,
 } from '@/api/quizzes'
@@ -19,12 +20,15 @@ import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
 import { Textarea } from '@/components/ui/Textarea'
 import { id } from '@/i18n/id'
-import type { QuizSource, QuizStatus } from '@/types/database'
+import { formatMessage } from '@/lib/message'
+import type { QuizSettings, QuizSource, QuizStatus } from '@/types/database'
 import { mapAiDraftToForm } from '../ai/ai-draft'
 import { QuestionEditor } from './QuestionEditor'
+import { QuestionReadOnly } from './QuestionReadOnly'
 import { quizErrorMessage } from './quiz-error-message'
 import {
   buildQuizSavePayload,
+  buildQuizSettings,
   createBlankQuestion,
   emptyQuizFormValues,
   mapEditorDataToForm,
@@ -107,7 +111,11 @@ function QuizEditorForm({
     source: initialData?.source ?? (aiDraft ? 'ai' : 'manual'),
     materialId: initialData?.materialId ?? aiDraft?.material_id ?? null,
   })
+  const [baseSettings] = useState<QuizSettings>(
+    () => initialData?.settings ?? {},
+  )
   const [activeQuizId, setActiveQuizId] = useState(initialData?.id)
+  const hasAttempts = initialData?.hasAttempts ?? false
   const [saved, setSaved] = useState<SavedQuizState | null>(null)
   const [showAiNotice, setShowAiNotice] = useState(isAiDraft)
   const [copied, setCopied] = useState(false)
@@ -132,20 +140,41 @@ function QuizEditorForm({
 
   const questions = useWatch({ control, name: 'questions' })
   const status = useWatch({ control, name: 'status' })
+  const timerMode = useWatch({ control, name: 'timerMode' })
+  const perQuestionSeconds = useWatch({ control, name: 'perQuestionSeconds' })
+  const totalMinutes = useWatch({ control, name: 'totalMinutes' })
   const totalPoints = questions.reduce((total, question) => {
     const points = Number(question.points)
     return total + (Number.isFinite(points) ? points : 0)
   }, 0)
 
   const saveMutation = useMutation({
-    mutationFn: (values: QuizFormValues) =>
-      saveQuiz(
+    mutationFn: async (values: QuizFormValues) => {
+      const settings = buildQuizSettings(values, baseSettings)
+
+      if (hasAttempts && activeQuizId) {
+        await updateQuizMeta({
+          id: activeQuizId,
+          title: values.title,
+          description: values.description.trim() || null,
+          settings,
+        })
+
+        return {
+          id: activeQuizId,
+          share_code: initialData?.shareCode ?? '',
+        }
+      }
+
+      return saveQuiz(
         buildQuizSavePayload(values, {
           id: activeQuizId,
           source: meta.source,
           materialId: meta.materialId,
+          baseSettings,
         }),
-      ),
+      )
+    },
     onSuccess: (result, values) => {
       if (!activeQuizId) {
         window.history.replaceState(
@@ -253,7 +282,20 @@ function QuizEditorForm({
             </p>
           </div>
 
-          {fields.length === 0 ? (
+          {hasAttempts ? (
+            <div className="space-y-3 rounded-card border-2 border-yellow bg-yellow-tint/60 p-4">
+              <h3 className="text-xl font-semibold text-ink">
+                {id.editor.readOnlyTitle}
+              </h3>
+              <p className="max-w-prose text-base text-ink-muted">
+                {id.editor.readOnlyBody}
+              </p>
+            </div>
+          ) : null}
+
+          {hasAttempts ? (
+            <QuestionReadOnly questions={questions} />
+          ) : fields.length === 0 ? (
             <EmptyState title={id.editor.emptyQuestions} />
           ) : (
             <div className="space-y-4">
@@ -281,25 +323,29 @@ function QuizEditorForm({
             </p>
           ) : null}
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => append(createBlankQuestion('multiple_choice'))}
-              disabled={fields.length >= 50}
-            >
-              {id.editor.addMultipleChoice}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => append(createBlankQuestion('text'))}
-              disabled={fields.length >= 50}
-            >
-              {id.editor.addText}
-            </Button>
-          </div>
+          {!hasAttempts ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => append(createBlankQuestion('multiple_choice'))}
+                  disabled={fields.length >= 50}
+                >
+                  {id.editor.addMultipleChoice}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => append(createBlankQuestion('text'))}
+                  disabled={fields.length >= 50}
+                >
+                  {id.editor.addText}
+                </Button>
+              </div>
 
-          {fields.length >= 50 ? (
-            <p className="text-base text-ink-muted">{id.editor.questionLimit}</p>
+              {fields.length >= 50 ? (
+                <p className="text-base text-ink-muted">{id.editor.questionLimit}</p>
+              ) : null}
+            </>
           ) : null}
         </section>
 
@@ -316,7 +362,8 @@ function QuizEditorForm({
                 <input
                   type="radio"
                   value="draft"
-                  className="mt-0.5 size-5 accent-blue"
+                  disabled={hasAttempts}
+                  className="mt-0.5 size-5 accent-blue disabled:cursor-not-allowed"
                   {...register('status')}
                 />
                 <span>
@@ -333,7 +380,8 @@ function QuizEditorForm({
                 <input
                   type="radio"
                   value="published"
-                  className="mt-0.5 size-5 accent-blue"
+                  disabled={hasAttempts}
+                  className="mt-0.5 size-5 accent-blue disabled:cursor-not-allowed"
                   {...register('status')}
                 />
                 <span>
@@ -346,6 +394,12 @@ function QuizEditorForm({
                 </span>
               </label>
             </div>
+
+            {hasAttempts ? (
+              <p className="text-base text-ink-muted">
+                {id.editor.readOnlyStatusHint}
+              </p>
+            ) : null}
           </fieldset>
 
           <label className="flex cursor-pointer items-start gap-3 rounded-input border-2 border-paper-line p-3">
@@ -363,6 +417,116 @@ function QuizEditorForm({
               </span>
             </span>
           </label>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-input border-2 border-paper-line p-3">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-5 accent-blue"
+              {...register('shuffleQuestions')}
+            />
+            <span>
+              <span className="block text-base font-bold text-ink">
+                {id.editor.shuffleQuestions}
+              </span>
+              <span className="mt-1 block text-base text-ink-muted">
+                {id.editor.shuffleQuestionsHint}
+              </span>
+            </span>
+          </label>
+
+          <div className="space-y-2">
+            <label className="flex cursor-pointer items-start gap-3 rounded-input border-2 border-paper-line p-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-5 accent-blue"
+                {...register('shuffleOptions')}
+              />
+              <span>
+                <span className="block text-base font-bold text-ink">
+                  {id.editor.shuffleOptions}
+                </span>
+                <span className="mt-1 block text-base text-ink-muted">
+                  {id.editor.shuffleOptionsHint}
+                </span>
+              </span>
+            </label>
+            <p className="px-3 text-base text-ink-muted">
+              {id.editor.shuffleOptionsNote}
+            </p>
+          </div>
+
+          <fieldset className="space-y-3 border-t border-paper-line pt-5">
+            <legend className="text-base font-bold text-ink">
+              {id.editor.timerLabel}
+            </legend>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              {(
+                [
+                  ['none', id.editor.timerNone],
+                  ['per_question', id.editor.timerPerQuestion],
+                  ['total', id.editor.timerTotal],
+                ] as const
+              ).map(([value, label]) => (
+                <label
+                  key={value}
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-input border-2 border-ink bg-white p-3 has-[:checked]:border-blue has-[:checked]:bg-blue-tint"
+                >
+                  <input
+                    type="radio"
+                    value={value}
+                    className="size-5 accent-blue"
+                    {...register('timerMode')}
+                  />
+                  <span className="text-base font-bold text-ink">{label}</span>
+                </label>
+              ))}
+            </div>
+
+            {timerMode === 'per_question' ? (
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={5}
+                max={600}
+                label={id.editor.timerPerQuestionLabel}
+                hint={id.editor.timerPerQuestionHint}
+                error={errors.perQuestionSeconds?.message}
+                {...register('perQuestionSeconds')}
+              />
+            ) : null}
+
+            {timerMode === 'total' ? (
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={120}
+                label={id.editor.timerTotalLabel}
+                hint={id.editor.timerTotalHint}
+                error={errors.totalMinutes?.message}
+                {...register('totalMinutes')}
+              />
+            ) : null}
+
+            {timerMode === 'per_question' ? (
+              <p aria-live="polite" className="text-base font-bold text-ink">
+                {formatMessage(id.editor.timerPerQuestionPreview, {
+                  seconds: perQuestionSeconds,
+                })}
+              </p>
+            ) : null}
+
+            {timerMode === 'total' ? (
+              <p aria-live="polite" className="text-base font-bold text-ink">
+                {formatMessage(id.editor.timerTotalPreview, {
+                  minutes: totalMinutes,
+                })}
+              </p>
+            ) : null}
+
+            <p className="text-base text-ink-muted">{id.editor.timerNote}</p>
+          </fieldset>
         </Card>
 
         {saved && !isDirty ? (

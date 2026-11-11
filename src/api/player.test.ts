@@ -52,7 +52,44 @@ describe('player API', () => {
       p_code: 'AB12CD',
     })
     expect(quiz.revealAnswers).toBe(true)
+    expect(quiz.shuffleQuestions).toBe(false)
+    expect(quiz.shuffleOptions).toBe(false)
+    expect(quiz.timer).toEqual({ mode: 'none' })
     expect(quiz.questions.map((question) => question.id)).toEqual(['q1', 'q2'])
+  })
+
+  it('membaca pengaturan acak dan timer dari kuis', async () => {
+    mockedRpc.mockResolvedValueOnce({
+      data: {
+        quiz: {
+          id: 'quiz-1',
+          title: 'Pecahan kelas 5',
+          status: 'published',
+          settings: {
+            reveal_answers: true,
+            shuffle_questions: true,
+            shuffle_options: true,
+            timer: { mode: 'total', seconds: 600 },
+          },
+        },
+        questions: [
+          {
+            id: 'q1',
+            position: 1,
+            type: 'text',
+            body: 'Ibu kota Indonesia?',
+            points: 1,
+          },
+        ],
+      },
+      error: null,
+    } as never)
+
+    const quiz = await getQuizByCode('AB12CD')
+
+    expect(quiz.shuffleQuestions).toBe(true)
+    expect(quiz.shuffleOptions).toBe(true)
+    expect(quiz.timer).toEqual({ mode: 'total', seconds: 600 })
   })
 
   it('menolak kuis yang belum terbit', async () => {

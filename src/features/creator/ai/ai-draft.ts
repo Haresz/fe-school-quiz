@@ -1,5 +1,6 @@
 import type { AiQuizDraft } from '@/api/ai'
 import {
+  emptyQuizFormValues,
   makeEditorKey,
   type QuizFormQuestion,
   type QuizFormValues,
@@ -43,6 +44,7 @@ function mapQuestion(
 
 export function mapAiDraftToForm(draft: AiQuizDraft): QuizFormValues {
   return {
+    ...emptyQuizFormValues(),
     title: draft.title,
     description: draft.description ?? '',
     status: 'draft',

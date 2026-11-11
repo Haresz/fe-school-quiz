@@ -127,6 +127,7 @@ Test mencakup auth, API, validasi form, editor, generator AI, dasbor, pemutar, h
 
 ## Batasan
 
+- Timer kuis dihitung di sisi klien berdasarkan waktu mulai; server tidak menegakkan batas waktu, jadi jawaban yang dikirim setelah waktu habis tetap diterima.
 - Belum ada uji E2E browser terhadap Supabase dan backend AI nyata.
 - Policy RLS `materials`, data seed, dan konfigurasi CORS backend perlu diverifikasi di environment target.
 - Kunci/secret yang pernah terekspos harus dirotasi sebelum production.

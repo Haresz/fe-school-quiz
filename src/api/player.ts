@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase'
 import { normalizeQuizCode } from '@/lib/quiz-code'
+import { readQuizTimer } from '@/lib/quiz-settings'
 import type {
   Json,
   QuestionType,
   QuizSettings,
   QuizStatus,
+  QuizTimerSettings,
 } from '@/types/database'
 import {
   PlayerApiError,
@@ -27,6 +29,9 @@ export type PlayerQuiz = {
   description: string | null
   status: QuizStatus | null
   revealAnswers: boolean
+  shuffleQuestions: boolean
+  shuffleOptions: boolean
+  timer: QuizTimerSettings
   questions: PlayerQuestion[]
 }
 
@@ -168,6 +173,9 @@ function normalizeQuiz(data: unknown): PlayerQuiz {
     readBoolean(quizRecord.reveal_answers) ??
     readBoolean(quizRecord.revealAnswers) ??
     false
+  const shuffleQuestions = readBoolean(settings.shuffle_questions) ?? false
+  const shuffleOptions = readBoolean(settings.shuffle_options) ?? false
+  const timer = readQuizTimer(settings.timer)
 
   const questions = questionsValue
     .map((question, index) => normalizeQuestion(question, index))
@@ -184,6 +192,9 @@ function normalizeQuiz(data: unknown): PlayerQuiz {
     description: readString(quizRecord.description)?.trim() || null,
     status: (status as QuizStatus | null) ?? null,
     revealAnswers,
+    shuffleQuestions,
+    shuffleOptions,
+    timer,
     questions,
   }
 }

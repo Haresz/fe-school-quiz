@@ -5,8 +5,13 @@ import type {
   QuizSettings,
   QuizSource,
   QuizStatus,
+  QuizTimerSettings,
   QuestionType,
 } from '@/types/database'
+import {
+  readQuizTimer,
+  readRevealAnswers,
+} from '@/lib/quiz-settings'
 import {
   QuizApiError,
   mapQuizDeleteError,
@@ -42,7 +47,13 @@ export type QuizEditorData = {
   source: QuizSource
   status: QuizStatus
   materialId: string | null
+  shareCode: string
+  hasAttempts: boolean
+  settings: QuizSettings
   revealAnswers: boolean
+  shuffleQuestions: boolean
+  shuffleOptions: boolean
+  timer: QuizTimerSettings
   questions: QuizEditorQuestion[]
 }
 
@@ -97,6 +108,7 @@ type QuizRecord = {
   description: string | null
   source: QuizSource
   status: QuizStatus
+  share_code: string
   settings: QuizSettings | null
 }
 
@@ -139,10 +151,10 @@ function mapQuestion(
 }
 
 export async function getQuizForEdit(id: string): Promise<QuizEditorData> {
-  const [quizResult, questionsResult] = await Promise.all([
+  const [quizResult, questionsResult, attemptsResult] = await Promise.all([
     supabase
       .from('quizzes')
-      .select('id, material_id, title, description, source, status, settings')
+      .select('id, material_id, title, description, source, status, share_code, settings')
       .eq('id', id)
       .maybeSingle(),
     supabase
@@ -150,12 +162,17 @@ export async function getQuizForEdit(id: string): Promise<QuizEditorData> {
       .select('id, quiz_id, position, type, body, options, explanation, points')
       .eq('quiz_id', id)
       .order('position', { ascending: true }),
+    supabase
+      .from('attempts')
+      .select('id', { count: 'exact', head: true })
+      .eq('quiz_id', id),
   ])
 
   if (quizResult.error) throw mapQuizLoadError(quizResult.error)
   if (!quizResult.data) throw new QuizApiError('quiz_not_found')
 
   if (questionsResult.error) throw mapQuizLoadError(questionsResult.error)
+  if (attemptsResult.error) throw mapQuizLoadError(attemptsResult.error)
 
   const quiz = quizResult.data as QuizRecord
   const questions = (questionsResult.data ?? []) as QuestionRow[]
@@ -182,7 +199,13 @@ export async function getQuizForEdit(id: string): Promise<QuizEditorData> {
     source: quiz.source,
     status: quiz.status,
     materialId: quiz.material_id,
-    revealAnswers: settings.reveal_answers === true,
+    shareCode: quiz.share_code,
+    hasAttempts: (attemptsResult.count ?? 0) > 0,
+    settings,
+    revealAnswers: readRevealAnswers(settings),
+    shuffleQuestions: settings.shuffle_questions === true,
+    shuffleOptions: settings.shuffle_options === true,
+    timer: readQuizTimer(settings.timer),
     questions: questions.map((question) => mapQuestion(question, keysById.get(question.id))),
   }
 }
@@ -209,6 +232,29 @@ export async function deleteQuiz(id: string, ownerId: string): Promise<void> {
     .eq('owner_id', ownerId)
 
   if (error) throw mapQuizDeleteError(error)
+}
+
+export type QuizMetaUpdate = {
+  id: string
+  title: string
+  description: string | null
+  settings: QuizSettings
+}
+
+export async function updateQuizMeta(input: QuizMetaUpdate): Promise<void> {
+  const { data, error } = await supabase
+    .from('quizzes')
+    .update({
+      title: input.title,
+      description: input.description,
+      settings: input.settings,
+    })
+    .eq('id', input.id)
+    .select('id')
+    .maybeSingle()
+
+  if (error) throw mapQuizError(error)
+  if (!data) throw new QuizApiError('quiz_not_found')
 }
 
 export async function saveQuiz(payload: QuizSavePayload): Promise<SavedQuiz> {

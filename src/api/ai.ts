@@ -44,6 +44,11 @@ export const aiDraftQuestionSchema = z.discriminatedUnion('type', [
   textDraftSchema,
 ])
 
+const aiTimerSchema = z.object({
+  mode: z.enum(['none', 'per_question', 'total']),
+  seconds: z.number().int().positive().optional(),
+})
+
 export const aiQuizDraftSchema = z.object({
   material_id: z.string().nullable(),
   title: z.string().trim().min(1).max(120),
@@ -53,7 +58,11 @@ export const aiQuizDraftSchema = z.object({
   settings: z
     .object({
       reveal_answers: z.boolean().optional(),
+      shuffle_questions: z.boolean().optional(),
+      shuffle_options: z.boolean().optional(),
+      timer: aiTimerSchema.optional(),
     })
+    .passthrough()
     .optional(),
   questions: z.array(aiDraftQuestionSchema).min(1).max(20),
 })

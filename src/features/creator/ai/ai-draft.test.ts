@@ -76,4 +76,24 @@ describe('mapAiDraftToForm', () => {
       }).revealAnswers,
     ).toBe(true)
   })
+
+  it('memetakan pengaturan acak dan timer dari draf AI', () => {
+    const result = mapAiDraftToForm({
+      ...draft,
+      settings: {
+        reveal_answers: true,
+        shuffle_questions: false,
+        shuffle_options: false,
+        timer: { mode: 'total', seconds: 600 },
+      },
+    })
+
+    expect(result).toMatchObject({
+      revealAnswers: true,
+      shuffleQuestions: false,
+      shuffleOptions: false,
+      timerMode: 'total',
+      totalMinutes: '10',
+    })
+  })
 })

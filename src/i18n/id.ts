@@ -87,6 +87,9 @@ export const id = {
     difficultyEasy: 'Mudah',
     difficultyMedium: 'Sedang',
     difficultyHard: 'Sulit',
+    settingsTitle: 'Pengaturan kuis',
+    settingsHint:
+      'Atur batas waktu dan urutan soal. Pilihan ini dibawa ke editor.',
     submit: 'Buat soal dengan AI',
     submitting: 'Menyusun soal...',
     submittingStatus: 'AI sedang menyusun soal. Tunggu sebentar, ya.',
@@ -103,6 +106,8 @@ export const id = {
       promptMax: 'Arahan tambahan maksimal 500 karakter.',
       countRequired: 'Isi jumlah soal dulu.',
       countRange: 'Jumlah soal harus 1 sampai 20.',
+      timerPerQuestionRange: 'Waktu per soal harus 5 sampai 600 detik.',
+      timerTotalRange: 'Waktu total harus 1 sampai 120 menit.',
     },
     errors: {
       unauthorized: 'Sesi kamu sudah berakhir. Masuk lagi untuk membuat soal.',

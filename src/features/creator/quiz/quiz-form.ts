@@ -210,7 +210,7 @@ export function emptyQuizFormValues(): QuizFormValues {
   }
 }
 
-function totalMinutesFromSeconds(seconds: number): string {
+export function totalMinutesFromSeconds(seconds: number): string {
   return String(Math.max(1, Math.ceil(seconds / 60)))
 }
 

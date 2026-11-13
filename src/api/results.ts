@@ -263,6 +263,10 @@ function normalizeAttemptDetail(
   }
 }
 
+function normalizeRate(value: number): number {
+  return Math.min(100, Math.max(0, Math.round(value * (value <= 1 ? 100 : 1))))
+}
+
 function normalizeQuestionStat(raw: unknown): QuizQuestionStat | undefined {
   const record = asRecord(raw)
   if (!record) return undefined
@@ -274,7 +278,10 @@ function normalizeQuestionStat(raw: unknown): QuizQuestionStat | undefined {
   if (!questionId) return undefined
 
   const correctCount =
-    readNumber(record.correct_count) ?? readNumber(record.correctCount) ?? 0
+    readNumber(record.correct_count) ??
+    readNumber(record.correctCount) ??
+    readNumber(record.correct) ??
+    0
   const answeredCount =
     readNumber(record.answered_count) ??
     readNumber(record.answeredCount) ??
@@ -282,15 +289,20 @@ function normalizeQuestionStat(raw: unknown): QuizQuestionStat | undefined {
     readNumber(record.totalAnswers) ??
     readNumber(record.answers_count) ??
     readNumber(record.answersCount) ??
+    readNumber(record.total) ??
     0
   const providedRate =
     readNumber(record.correct_rate) ?? readNumber(record.correctRate)
+  const providedPercent =
+    readNumber(record.correct_pct) ?? readNumber(record.correctPct)
   const correctRate =
-    answeredCount > 0
-      ? Math.min(100, Math.max(0, Math.round((correctCount / answeredCount) * 100)))
-      : providedRate !== undefined
-        ? Math.min(100, Math.max(0, Math.round(providedRate * (providedRate <= 1 ? 100 : 1))))
-        : 0
+    providedRate !== undefined
+      ? normalizeRate(providedRate)
+      : providedPercent !== undefined
+        ? Math.min(100, Math.max(0, Math.round(providedPercent)))
+        : answeredCount > 0
+          ? Math.min(100, Math.max(0, Math.round((correctCount / answeredCount) * 100)))
+          : 0
 
   return {
     questionId,
@@ -330,7 +342,11 @@ function normalizeQuizStats(data: unknown): QuizStats {
 
   return {
     attemptCount:
-      readNumber(root?.attempt_count) ?? readNumber(root?.attemptCount) ?? null,
+      readNumber(root?.attempt_count) ??
+      readNumber(root?.attemptCount) ??
+      readNumber(root?.total_attempts) ??
+      readNumber(root?.totalAttempts) ??
+      null,
     averageScore:
       readNumber(root?.average_score) ?? readNumber(root?.averageScore) ?? null,
     maxScore: readNumber(root?.max_score) ?? readNumber(root?.maxScore) ?? null,

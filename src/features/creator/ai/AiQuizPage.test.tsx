@@ -157,7 +157,50 @@ describe('AiQuizPage', () => {
       const state = JSON.parse(
         screen.getByTestId('location-state').textContent ?? '{}',
       ) as { aiDraft?: AiQuizDraft }
-      expect(state.aiDraft).toEqual(draft)
+      expect(state.aiDraft).toEqual({
+        ...draft,
+        settings: {
+          reveal_answers: true,
+          shuffle_questions: true,
+          shuffle_options: true,
+          timer: { mode: 'none' },
+        },
+      })
+    })
+  })
+
+  it('membawa pengaturan waktu dan acak pilihan ke draf editor', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByRole('heading', { name: id.ai.formTitle })
+    await user.selectOptions(
+      screen.getByLabelText(id.ai.materialLabel),
+      'material-1',
+    )
+
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: new RegExp(`^${id.editor.shuffleQuestions}`),
+      }),
+    )
+    await user.click(screen.getByRole('radio', { name: id.editor.timerTotal }))
+    const minutes = screen.getByLabelText(id.editor.timerTotalLabel)
+    await user.clear(minutes)
+    await user.type(minutes, '10')
+
+    await user.click(screen.getByRole('button', { name: id.ai.submit }))
+
+    await waitFor(() => {
+      const state = JSON.parse(
+        screen.getByTestId('location-state').textContent ?? '{}',
+      ) as { aiDraft?: AiQuizDraft }
+      expect(state.aiDraft?.settings).toMatchObject({
+        reveal_answers: true,
+        shuffle_questions: false,
+        shuffle_options: true,
+        timer: { mode: 'total', seconds: 600 },
+      })
     })
   })
 

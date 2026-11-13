@@ -1,13 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  AiApiError,
-  generateQuizWithAi,
-  type GenerateQuizInput,
-} from '@/api/ai'
+import { AiApiError, generateQuizWithAi } from '@/api/ai'
 import { listActiveMaterials } from '@/api/materials'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -18,9 +14,11 @@ import { Spinner } from '@/components/ui/Spinner'
 import { Textarea } from '@/components/ui/Textarea'
 import { useAuth } from '@/features/auth/auth-context'
 import { id } from '@/i18n/id'
+import { QuizSettingsFields } from '../quiz/QuizSettingsFields'
 import { aiErrorMessage } from './ai-error-message'
 import {
   aiFormSchema,
+  buildAiDraftSettings,
   buildGenerateInput,
   emptyAiFormValues,
   type AiFormValues,
@@ -38,6 +36,7 @@ export function AiQuizPage() {
   const [defaultValues] = useState<AiFormValues>(emptyAiFormValues)
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<AiFormValues>({
@@ -45,11 +44,30 @@ export function AiQuizPage() {
     defaultValues,
   })
 
+  const timerMode = useWatch({ control, name: 'timerMode' })
+  const perQuestionSeconds = useWatch({ control, name: 'perQuestionSeconds' })
+  const totalMinutes = useWatch({ control, name: 'totalMinutes' })
+
   const generateMutation = useMutation({
-    mutationFn: async (input: GenerateQuizInput) => {
+    mutationFn: async (values: AiFormValues) => {
       const accessToken = session?.access_token
       if (!accessToken) throw new AiApiError('unauthorized')
-      return generateQuizWithAi(input, accessToken)
+
+      const result = await generateQuizWithAi(
+        buildGenerateInput(values),
+        accessToken,
+      )
+
+      return {
+        ...result,
+        draft: {
+          ...result.draft,
+          settings: {
+            ...result.draft.settings,
+            ...buildAiDraftSettings(values),
+          },
+        },
+      }
     },
     onSuccess: ({ draft }) => {
       navigate('/quizzes/new', { state: { aiDraft: draft } })
@@ -58,7 +76,7 @@ export function AiQuizPage() {
 
   const onSubmit = handleSubmit((values) => {
     generateMutation.reset()
-    generateMutation.mutate(buildGenerateInput(values))
+    generateMutation.mutate(values)
   })
 
   const isGenerating = generateMutation.isPending
@@ -190,6 +208,26 @@ export function AiQuizPage() {
               <option value="sedang">{id.ai.difficultyMedium}</option>
               <option value="sulit">{id.ai.difficultyHard}</option>
             </Select>
+
+            <div className="space-y-3 border-t border-paper-line pt-5">
+              <div className="space-y-1">
+                <h3 className="text-xl font-semibold text-ink">
+                  {id.ai.settingsTitle}
+                </h3>
+                <p className="max-w-prose text-base text-ink-muted">
+                  {id.ai.settingsHint}
+                </p>
+              </div>
+
+              <QuizSettingsFields
+                register={register}
+                errors={errors}
+                timerMode={timerMode}
+                perQuestionSeconds={perQuestionSeconds}
+                totalMinutes={totalMinutes}
+                disabled={isGenerating}
+              />
+            </div>
 
             {generateMutation.isError ? (
               <ErrorState

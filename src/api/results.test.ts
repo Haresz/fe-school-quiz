@@ -346,6 +346,66 @@ describe('getQuizStats', () => {
     })
   })
 
+  it('membaca statistik dari bentuk response total/correct/correct_pct', async () => {
+    mockedRpc.mockResolvedValue({
+      data: {
+        quiz_id: 'quiz-1',
+        questions: [
+          {
+            body: 'Test ya',
+            type: 'text',
+            total: 5,
+            wrong: 4,
+            points: 1,
+            correct: 1,
+            options: null,
+            position: 1,
+            wrong_pct: 80,
+            unanswered: 0,
+            correct_pct: 20,
+            question_id: 'q1',
+            unanswered_pct: 0,
+          },
+          {
+            body: 'APA YANG PA',
+            type: 'multiple_choice',
+            total: 5,
+            wrong: 0,
+            points: 1,
+            correct: 5,
+            position: 2,
+            wrong_pct: 0,
+            unanswered: 0,
+            correct_pct: 100,
+            question_id: 'q2',
+            unanswered_pct: 0,
+          },
+        ],
+        avg_score_pct: 60,
+        total_attempts: 5,
+      },
+      error: null,
+    } as never)
+
+    const stats = await getQuizStats('quiz-1')
+
+    expect(stats.attemptCount).toBe(5)
+    expect(stats.questionStats).toHaveLength(2)
+    expect(stats.questionStats[0]).toMatchObject({
+      questionId: 'q1',
+      body: 'Test ya',
+      correctCount: 1,
+      answeredCount: 5,
+      correctRate: 20,
+    })
+    expect(stats.questionStats[1]).toMatchObject({
+      questionId: 'q2',
+      correctCount: 5,
+      answeredCount: 5,
+      correctRate: 100,
+    })
+  })
+
   it('menerima daftar baris langsung dengan rate 0..1', async () => {
     mockedRpc.mockResolvedValue({
       data: [
